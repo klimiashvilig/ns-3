@@ -373,6 +373,11 @@ public:
 
   uint8_t GetTransmissionPower (void);
 
+  /**
+    * Find the minimum waiting time before the next possible transmission.
+    */
+  Time GetNextTransmissionDelay (void);
+
 private:
   /**
    * Structure representing the parameters that will be used in the
@@ -402,11 +407,6 @@ private:
    * Used to pick a random channel on which to send the packet.
    */
   std::vector<Ptr<LogicalLoraChannel> > Shuffle (std::vector<Ptr<LogicalLoraChannel> > vector);
-
-  /**
-    * Find the minimum waiting time before the next possible transmission.
-    */
-  Time GetNextTransmissionDelay (void);
 
 
   /**

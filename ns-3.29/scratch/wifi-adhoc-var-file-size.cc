@@ -99,7 +99,7 @@ Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
 std::string fileName = "wifiresults-" + std::to_string(distance) + "m-TC-" + std::to_string((int)TCInterval) + ".txt";
-bool writeInFile = true;
+bool writeInFile = false;
 bool variableFileSize = true;
 bool variableRunNum = true;
 

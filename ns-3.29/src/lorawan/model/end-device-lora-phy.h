@@ -78,7 +78,7 @@ public:
   /**
    * Notify listeners that we woke up
    */
-  virtual void NotifyStandby (void) = 0;
+  virtual void NotifyIdle (void) = 0;
 };
 
 /**
@@ -123,7 +123,7 @@ public:
      * When the PHY is in this state, it's listening to the channel, and
      * it's also ready to transmit data passed to it by the MAC layer.
      */
-    STANDBY,
+    IDLE,
 
     /**
      * The PHY layer is sending a packet.
@@ -199,9 +199,9 @@ public:
   EndDeviceLoraPhy::State GetState (void);
 
   /**
-   * Switch to the STANDBY state.
+   * Switch to the IDLE state.
    */
-  void SwitchToStandby (void);
+  void SwitchToIdle (void);
 
   /**
    * Switch to the SLEEP state.

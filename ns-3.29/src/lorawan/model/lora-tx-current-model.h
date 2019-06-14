@@ -74,9 +74,9 @@ public:
   /**
    * \param idleCurrent (Ampere)
    *
-   * Set the current in the STANDBY state.
+   * Set the current in the IDLE state.
    */
-  void SetStandbyCurrent (double idleCurrent);
+  void SetIdleCurrent (double idleCurrent);
 
   /**
    * \return the power amplifier efficiency.
@@ -89,9 +89,9 @@ public:
   double GetVoltage (void) const;
 
   /**
-   * \return the current in the STANDBY state.
+   * \return the current in the IDLE state.
    */
-  double GetStandbyCurrent (void) const;
+  double GetIdleCurrent (void) const;
 
   double CalcTxCurrent (double txPowerDbm) const;
 

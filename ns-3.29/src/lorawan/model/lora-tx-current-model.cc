@@ -63,10 +63,10 @@ LinearLoraTxCurrentModel::GetTypeId (void)
                    MakeDoubleAccessor (&LinearLoraTxCurrentModel::SetVoltage,
                                        &LinearLoraTxCurrentModel::GetVoltage),
                    MakeDoubleChecker<double> ())
-    .AddAttribute ("StandbyCurrent", "The current in the STANDBY state (in Watts).",
+    .AddAttribute ("IdleCurrent", "The current in the IDLE state (in Watts).",
                    DoubleValue (0.0014),      // idle mode = 1.4mA
-                   MakeDoubleAccessor (&LinearLoraTxCurrentModel::SetStandbyCurrent,
-                                       &LinearLoraTxCurrentModel::GetStandbyCurrent),
+                   MakeDoubleAccessor (&LinearLoraTxCurrentModel::SetIdleCurrent,
+                                       &LinearLoraTxCurrentModel::GetIdleCurrent),
                    MakeDoubleChecker<double> ())
   ;
   return tid;
@@ -97,7 +97,7 @@ LinearLoraTxCurrentModel::SetVoltage (double voltage)
 }
 
 void
-LinearLoraTxCurrentModel::SetStandbyCurrent (double idleCurrent)
+LinearLoraTxCurrentModel::SetIdleCurrent (double idleCurrent)
 {
   NS_LOG_FUNCTION (this << idleCurrent);
   m_idleCurrent = idleCurrent;
@@ -116,7 +116,7 @@ LinearLoraTxCurrentModel::GetVoltage (void) const
 }
 
 double
-LinearLoraTxCurrentModel::GetStandbyCurrent (void) const
+LinearLoraTxCurrentModel::GetIdleCurrent (void) const
 {
   return m_idleCurrent;
 }

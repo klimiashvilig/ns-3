@@ -36,6 +36,7 @@ namespace ns3 {
 namespace lorawan {
 
 class LoraChannel;
+class LoraStateHelper;
 
 /**
  * Structure to collect all parameters that are used to compute the duration of
@@ -68,9 +69,70 @@ std::ostream &operator << (std::ostream &os, const LoraTxParameters &params);
  * duration of a packet based on a series of parameters that are collected in
  * LoraTxParameters objects.
  */
+
+class LoraPhyListener
+{
+public:
+  virtual ~LoraPhyListener ();
+
+  /**
+   * \param duration the expected duration of the packet reception.
+   *
+   * We have received the first bit of a packet. We decided
+   * that we could synchronize on this packet. It does not mean
+   * we will be able to successfully receive completely the
+   * whole packet. It means that we will report a BUSY status until
+   * one of the following happens:
+   *   - NotifyRxEndOk
+   *   - NotifyRxEndError
+   *   - NotifyTxStart
+   */
+  virtual void NotifyRxStart (Time duration) = 0;
+  /**
+   * We have received the last bit of a packet for which
+   * NotifyRxStart was invoked first and, the packet has
+   * been successfully received.
+   */
+  virtual void NotifyRxEndOk (void) = 0;
+  /**
+   * We have received the last bit of a packet for which
+   * NotifyRxStart was invoked first and, the packet has
+   * _not_ been successfully received.
+   */
+  virtual void NotifyRxEndError (void) = 0;
+  /**
+   * \param duration the expected transmission duration.
+   * \param txPowerDbm the nominal tx power in dBm
+   *
+   * We are about to send the first bit of the packet.
+   * We do not send any event to notify the end of
+   * transmission. Listeners should assume that the
+   * channel implicitely reverts to the idle state
+   * unless they have received a cca busy report.
+   */
+  virtual void NotifyTxStart (Time duration, double txPowerDbm) = 0;
+  /**
+   * Notify listeners that we went to sleep
+   */
+  virtual void NotifySleep (void) = 0;
+  /**
+   * Notify listeners that we went to Idle
+   */
+  virtual void NotifyIdle (void) = 0;
+
+  virtual void NotifyWakeup (void) = 0;
+};
+
 class LoraPhy : public Object
 {
 public:
+  enum State
+  {
+    IDLE,
+    TX,
+    RX,
+    SLEEP
+  };
   // TypeId
   static TypeId GetTypeId (void);
 
@@ -246,6 +308,10 @@ public:
    */
   static Time GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams);
 
+  void RegisterListener(LoraPhyListener *listener);
+
+  Ptr<LoraStateHelper> GetStateHelper(void);
+
 private:
   Ptr<MobilityModel> m_mobility;   //!< The mobility model associated to this PHY.
 
@@ -322,6 +388,8 @@ protected:
    * The callback to perform upon the end of a transmission.
    */
   TxFinishedCallback m_txFinishedCallback;
+
+  Ptr<LoraStateHelper> m_state;
 };
 
 } /* namespace ns3 */

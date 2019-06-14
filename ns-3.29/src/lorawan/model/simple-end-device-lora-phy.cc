@@ -60,10 +60,10 @@ SimpleEndDeviceLoraPhy::Send (Ptr<Packet> packet, LoraTxParameters txParams,
 
   NS_LOG_INFO ("Current state: " << m_state);
 
-  // We must be either in STANDBY or SLEEP mode to send a packet
-  if (m_state != STANDBY && m_state != SLEEP)
+  // We must be either in IDLE or SLEEP mode to send a packet
+  if (m_state != IDLE && m_state != SLEEP)
     {
-      NS_LOG_INFO ("Cannot send because device is currently not in STANDBY or SLEEP mode");
+      NS_LOG_INFO ("Cannot send because device is currently not in IDLE or SLEEP mode");
       return;
     }
 
@@ -83,14 +83,14 @@ SimpleEndDeviceLoraPhy::Send (Ptr<Packet> packet, LoraTxParameters txParams,
   NS_LOG_INFO ("Sending the packet in the channel");
   m_channel->Send (this, packet, txPowerDbm, txParams, duration, frequencyMHz);
 
-  // Schedule the switch back to STANDBY mode.
+  // Schedule the switch back to IDLE mode.
   // For reference see SX1272 datasheet, section 4.1.6
-  Simulator::Schedule (duration, &EndDeviceLoraPhy::SwitchToStandby, this);
+  Simulator::Schedule (duration, &EndDeviceLoraPhy::SwitchToIdle, this);
 
   // Schedule the txFinished callback, if it was set
   // The call is scheduled just after the switch to standby in case the upper
   // layer wishes to change the state. This ensures that it will find a PHY in
-  // STANDBY mode.
+  // IDLE mode.
   if (!m_txFinishedCallback.IsNull ())
     {
       Simulator::Schedule (duration + NanoSeconds (10),
@@ -150,9 +150,9 @@ SimpleEndDeviceLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
         NS_LOG_INFO ("Dropping packet because device is already in RX state");
         break;
       }
-    // If we are in STANDBY mode, we can potentially lock on the currently
+    // If we are in IDLE mode, we can potentially lock on the currently
     // incoming transmission
-    case STANDBY:
+    case IDLE:
       {
         // There are a series of properties the packet needs to respect in order
         // for us to be able to lock on it:
@@ -233,7 +233,7 @@ SimpleEndDeviceLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
         if (canLockOnPacket)
           {
             // Switch to RX state
-            // EndReceive will handle the switch back to STANDBY state
+            // EndReceive will handle the switch back to IDLE state
             SwitchToRx ();
 
             // Schedule the end of the reception of the packet
@@ -256,8 +256,8 @@ SimpleEndDeviceLoraPhy::EndReceive (Ptr<Packet> packet,
 {
   NS_LOG_FUNCTION (this << packet << event);
 
-  // Automatically switch to Standby in either case
-  SwitchToStandby ();
+  // Automatically switch to Idle in either case
+  SwitchToIdle ();
 
   // Fire the trace source
   m_phyRxEndTrace (packet);

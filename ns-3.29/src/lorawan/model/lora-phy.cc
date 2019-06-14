@@ -21,7 +21,9 @@
 #include "ns3/lora-phy.h"
 #include "ns3/log.h"
 #include "ns3/simulator.h"
+#include "ns3/pointer.h"
 #include <algorithm>
+#include "ns3/lora-state-helper.h"
 
 namespace ns3 {
 namespace lorawan {
@@ -29,6 +31,10 @@ namespace lorawan {
 NS_LOG_COMPONENT_DEFINE ("LoraPhy");
 
 NS_OBJECT_ENSURE_REGISTERED (LoraPhy);
+
+LoraPhyListener::~LoraPhyListener()
+{
+}
 
 TypeId
 LoraPhy::GetTypeId (void)
@@ -69,12 +75,18 @@ LoraPhy::GetTypeId (void)
                      "could not be correctly received because"
                      "its received power is below the sensitivity of the receiver",
                      MakeTraceSourceAccessor (&LoraPhy::m_underSensitivity),
-                     "ns3::Packet::TracedCallback");
+                     "ns3::Packet::TracedCallback")
+    .AddAttribute ("State",
+                   "The state of the PHY layer.",
+                   PointerValue(),
+                   MakePointerAccessor(&LoraPhy::m_state),
+                   MakePointerChecker<LoraStateHelper>());
   return tid;
 }
 
 LoraPhy::LoraPhy ()
 {
+  m_state = CreateObject<LoraStateHelper>();
 }
 
 LoraPhy::~LoraPhy ()
@@ -140,6 +152,7 @@ void
 LoraPhy::SetReceiveOkCallback (RxOkCallback callback)
 {
   m_rxOkCallback = callback;
+  m_state->SetReceiveOkCallback(callback);
 }
 
 void
@@ -199,6 +212,18 @@ LoraPhy::GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams)
 
   // Compute and return the total packet on-air time
   return Seconds (tPreamble + tPayload);
+}
+
+void
+LoraPhy::RegisterListener(LoraPhyListener *listener)
+{
+  m_state->RegisterListener(listener);
+}
+
+Ptr<LoraStateHelper>
+LoraPhy::GetStateHelper(void)
+{
+  return m_state;
 }
 
 std::ostream &operator << (std::ostream &os, const LoraTxParameters &params)

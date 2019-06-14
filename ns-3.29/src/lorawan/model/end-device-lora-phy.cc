@@ -115,16 +115,16 @@ EndDeviceLoraPhy::SetFrequency (double frequencyMHz)
 }
 
 void
-EndDeviceLoraPhy::SwitchToStandby (void)
+EndDeviceLoraPhy::SwitchToIdle (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  m_state = STANDBY;
+  m_state = IDLE;
 
   // Notify listeners of the state change
   for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
     {
-      (*i)->NotifyStandby ();
+      (*i)->NotifyIdle ();
     }
 }
 
@@ -133,7 +133,7 @@ EndDeviceLoraPhy::SwitchToRx (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  NS_ASSERT (m_state == STANDBY);
+  NS_ASSERT (m_state == IDLE);
 
   m_state = RX;
 
@@ -165,7 +165,7 @@ EndDeviceLoraPhy::SwitchToSleep (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  NS_ASSERT (m_state == STANDBY);
+  NS_ASSERT (m_state == IDLE);
 
   m_state = SLEEP;
 

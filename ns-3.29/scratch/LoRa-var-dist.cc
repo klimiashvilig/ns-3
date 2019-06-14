@@ -30,9 +30,10 @@
 
 #include "ns3/basic-energy-source-helper.h"
 #include "ns3/energy-module.h"
-#include "ns3/lora-energy-model-helper.h"
+#include "ns3/lora-radio-energy-model-helper.h"
 
 using namespace ns3;
+using namespace lorawan;
 
 int nEndDevices = 1;
 int nGatways = 1;
@@ -49,8 +50,12 @@ DeviceEnergyModelContainer gatewayModels;
 
 void 
 PacketReceptionCallback(Ptr<Packet const> packet, uint32_t systemId) {
-  std::cout << "Packet received" << std::endl;
-  std::cout << "End of simulation! Simulation time - " << Simulator::Now ().GetSeconds () << "s" << std::endl;
+    double energyConsumed = 0;
+    for (DeviceEnergyModelContainer::Iterator iter = endDeviceModels.Begin(); iter != endDeviceModels.End(); iter++)
+        energyConsumed += (*iter)->GetTotalEnergyConsumption();
+    for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++)
+        energyConsumed += (*iter)->GetTotalEnergyConsumption();
+    std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s  |  Total energy consumed - " << energyConsumed << "J" << std::endl;
 }
 
 int main (int argc, char *argv[])
@@ -139,14 +144,12 @@ int main (int argc, char *argv[])
     /*********************************************
     *  Install applications on the end devices  *
     *********************************************/
-
-    Time appStopTime = Seconds (5000);
     LargeAppSenderHelper appHelper = LargeAppSenderHelper ();
     appHelper.SetFileSize(fileSize);
     ApplicationContainer appContainer = appHelper.Install (endDevices);
 
     appContainer.Start (Seconds (0));
-    appContainer.Stop (appStopTime);
+    appContainer.Stop (Hours(2));
 
     Ptr<Node> object = gateways.Get(0);
     // Get the device
@@ -170,13 +173,13 @@ int main (int argc, char *argv[])
     EnergySourceContainer endDeviceSources = basicSourceHelper.Install (endDevices);
     EnergySourceContainer gatewaySources = basicSourceHelper.Install (gateways);
     /* device energy model */
-    LoraEnergyModelHelper loraEnergyHelper;
+    LoraRadioEnergyModelHelper loraEnergyHelper;
     // configure radio energy model
     // install device model
     endDeviceModels = loraEnergyHelper.Install (endDevicesContainer, endDeviceSources);
     gatewayModels = loraEnergyHelper.Install (gatewayContainer, gatewaySources);
 
-    Simulator::Stop (appStopTime + Hours (2));
+    Simulator::Stop (Hours (2));
 
     // PrintSimulationTime ();
 

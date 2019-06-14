@@ -673,8 +673,8 @@ EndDeviceLoraMac::OpenFirstReceiveWindow (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  // Set Phy in Standby mode
-  m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToStandby ();
+  // Set Phy in Idle mode
+  m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToIdle ();
 
   //Calculate the duration of a single symbol for the first receive window DR
   double tSym = pow (2, GetSfFromDataRate (GetFirstReceiveWindowDataRate ())) / GetBandwidthFromDataRate ( GetFirstReceiveWindowDataRate ());
@@ -710,7 +710,7 @@ EndDeviceLoraMac::CloseFirstReceiveWindow (void)
     case EndDeviceLoraPhy::SLEEP:
       // PHY has received, and the MAC's Receive already put the device to sleep
       break;
-    case EndDeviceLoraPhy::STANDBY:
+    case EndDeviceLoraPhy::IDLE:
       // Turn PHY layer to SLEEP
       phy->SwitchToSleep ();
       break;
@@ -731,8 +731,8 @@ EndDeviceLoraMac::OpenSecondReceiveWindow (void)
       return;
     }
 
-  // Set Phy in Standby mode
-  m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToStandby ();
+  // Set Phy in Idle mode
+  m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToIdle ();
 
   // Switch to appropriate channel and data rate
   NS_LOG_INFO ("Using parameters: " << m_secondReceiveWindowFrequency << "Hz, DR"
@@ -776,7 +776,7 @@ EndDeviceLoraMac::CloseSecondReceiveWindow (void)
       // PHY is receiving: let it finish
       NS_LOG_DEBUG ("PHY is receiving: Receive will handle the result.");
       return;
-    case EndDeviceLoraPhy::STANDBY:
+    case EndDeviceLoraPhy::IDLE:
       // Turn PHY layer to sleep
       phy->SwitchToSleep ();
       break;

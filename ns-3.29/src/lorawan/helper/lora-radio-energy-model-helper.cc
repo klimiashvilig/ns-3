@@ -89,8 +89,8 @@ LoraRadioEnergyModelHelper::DoInstall (Ptr<NetDevice> device,
 
   // set energy depletion callback
   // if none is specified, make a callback to EndDeviceLoraPhy::SetSleepMode
-  Ptr<LoraNetDevice> loraDevice = device->GetObject<LoraNetDevice> ();
-  Ptr<EndDeviceLoraPhy> loraPhy = loraDevice->GetPhy ()->GetObject<EndDeviceLoraPhy> ();
+  Ptr<LoraNetDevice> loraDevice = DynamicCast<LoraNetDevice>(device);
+  Ptr<LoraPhy> loraPhy = loraDevice->GetPhy();
   // add model to device model list in energy source
   source->AppendDeviceEnergyModel (model);
   // create and register energy model phy listener

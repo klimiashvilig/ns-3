@@ -1086,9 +1086,9 @@ PhyConnectivityTest::Reset (void)
   edPhy2->SetMobility (mob2);
   edPhy3->SetMobility (mob3);
 
-  edPhy1->SwitchToStandby ();
-  edPhy2->SwitchToStandby ();
-  edPhy3->SwitchToStandby ();
+  edPhy1->SwitchToIdle ();
+  edPhy2->SwitchToIdle ();
+  edPhy3->SwitchToIdle ();
 
   channel->Add (edPhy1);
   channel->Add (edPhy2);
@@ -1287,8 +1287,8 @@ PhyConnectivityTest::DoRun (void)
   Simulator::Run ();
   Simulator::Destroy ();
 
-  NS_TEST_EXPECT_MSG_EQ (edPhy1->GetState (), SimpleEndDeviceLoraPhy::STANDBY, "State didn't switch to STANDBY as expected");
-  NS_TEST_EXPECT_MSG_EQ (edPhy2->GetState (), SimpleEndDeviceLoraPhy::STANDBY, "State didn't switch to STANDBY as expected");
+  NS_TEST_EXPECT_MSG_EQ (edPhy1->GetState (), SimpleEndDeviceLoraPhy::IDLE, "State didn't switch to IDLE as expected");
+  NS_TEST_EXPECT_MSG_EQ (edPhy2->GetState (), SimpleEndDeviceLoraPhy::IDLE, "State didn't switch to IDLE as expected");
 }
 
 /*****************

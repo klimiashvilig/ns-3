@@ -19,7 +19,7 @@
 
 #include "ns3/device-energy-model.h"
 #include "ns3/traced-value.h"
-#include "end-device-lora-phy.h"
+#include "lora-phy.h"
 #include "lora-tx-current-model.h"
 
 namespace ns3 {
@@ -28,7 +28,7 @@ namespace lorawan {
 /**
  * \ingroup energy
  */
-class LoraRadioEnergyModelPhyListener : public EndDeviceLoraPhyListener
+class LoraRadioEnergyModelPhyListener : public LoraPhyListener
 {
 public:
   /**
@@ -60,7 +60,7 @@ public:
    *
    * Defined in ns3::LoraEndDevicePhyListener
    */
-  void NotifyRxStart (void);
+  void NotifyRxStart (Time duration);
 
   /**
    * \brief Switches the LoraRadioEnergyModel to TX state and switches back to
@@ -71,7 +71,24 @@ public:
    *
    * Defined in ns3::LoraEndDevicePhyListener
    */
-  void NotifyTxStart (double txPowerDbm);
+  void NotifyRxEndOk (void);
+  /**
+   * We have received the last bit of a packet for which
+   * NotifyRxStart was invoked first and, the packet has
+   * _not_ been successfully received.
+   */
+  void NotifyRxEndError (void);
+  /**
+   * \param duration the expected transmission duration.
+   * \param txPowerDbm the nominal tx power in dBm
+   *
+   * We are about to send the first bit of the packet.
+   * We do not send any event to notify the end of
+   * transmission. Listeners should assume that the
+   * channel implicitely reverts to the idle state
+   * unless they have received a cca busy report.
+   */
+  void NotifyTxStart (Time duration, double txPowerDbm);
 
   /**
    * Defined in ns3::LoraEndDevicePhyListener
@@ -81,14 +98,16 @@ public:
   /**
    * Defined in ns3::LoraEndDevicePhyListener
    */
-  void NotifyStandby (void);
+  void NotifyIdle (void);
+
+  void NotifyWakeup(void);
 
 
 private:
   /**
    * A helper function that makes scheduling m_changeStateCallback possible.
    */
-  void SwitchToStandby (void);
+  void SwitchToIdle (void);
 
   /**
    * Change state callback used to notify the LoraRadioEnergyModel of a state
@@ -101,6 +120,8 @@ private:
    * the nominal tx power used to transmit the current frame.
    */
   UpdateTxCurrentCallback m_updateTxCurrentCallback;
+
+  EventId m_switchToIdleEvent;
 };
 
 
@@ -167,13 +188,13 @@ public:
    *
    * \returns idle current of the lora device.
    */
-  double GetStandbyCurrentA (void) const;
+  double GetIdleCurrentA (void) const;
   /**
    * \brief Sets idle current.
    *
    * \param idleCurrentA the idle current
    */
-  void SetStandbyCurrentA (double idleCurrentA);
+  void SetIdleCurrentA (double idleCurrentA);
   /**
    * \brief Gets transmit current.
    *
@@ -214,7 +235,7 @@ public:
   /**
    * \returns Current state.
    */
-  EndDeviceLoraPhy::State GetCurrentState (void) const;
+  LoraPhy::State GetCurrentState (void) const;
 
   /**
    * \param callback Callback function.
@@ -297,7 +318,7 @@ private:
    * Sets current state. This function is private so that only the energy model
    * can change its own state.
    */
-  void SetLoraRadioState (const EndDeviceLoraPhy::State state);
+  void SetLoraRadioState (const LoraPhy::State state);
 
   Ptr<EnergySource> m_source; ///< energy source
 
@@ -313,7 +334,7 @@ private:
   TracedValue<double> m_totalEnergyConsumption;
 
   // State variables.
-  EndDeviceLoraPhy::State m_currentState;  ///< current state the radio is in
+  LoraPhy::State m_currentState;  ///< current state the radio is in
   Time m_lastUpdateTime;          ///< time stamp of previous energy update
 
   uint8_t m_nPendingChangeState; ///< pending state change
@@ -325,7 +346,7 @@ private:
   /// Energy recharged callback
   LoraRadioEnergyRechargedCallback m_energyRechargedCallback;
 
-  /// EndDeviceLoraPhy listener
+  /// LoraPhy listener
   LoraRadioEnergyModelPhyListener *m_listener;
 };
 

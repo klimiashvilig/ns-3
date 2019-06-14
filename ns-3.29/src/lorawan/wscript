@@ -48,6 +48,7 @@ def build(bld):
         'model/lora-radio-energy-model.cc',
         'model/lora-tx-current-model.cc',
         'model/lora-utils.cc',
+        'model/large-app-sender.cc',
         'helper/lora-radio-energy-model-helper.cc',
         'helper/lora-helper.cc',
         'helper/lora-phy-helper.cc',
@@ -57,6 +58,8 @@ def build(bld):
         'helper/forwarder-helper.cc',
         'helper/network-server-helper.cc',
         'helper/lora-packet-tracker.cc',
+        'helper/large-app-sender-helper.cc',
+        'helper/lora-state-helper.cc',
         'test/utilities.cc',
         ]
 
@@ -107,6 +110,7 @@ def build(bld):
         'model/lora-radio-energy-model.h',
         'model/lora-tx-current-model.h',
         'model/lora-utils.h',
+        'model/large-app-sender.h',
         'helper/lora-radio-energy-model-helper.h',
         'helper/lora-helper.h',
         'helper/lora-phy-helper.h',
@@ -116,6 +120,8 @@ def build(bld):
         'helper/forwarder-helper.h',
         'helper/network-server-helper.h',
         'helper/lora-packet-tracker.h',
+        'helper/large-app-sender-helper.h',
+        'helper/lora-state-helper.h',
         'test/utilities.h',
         ]
 

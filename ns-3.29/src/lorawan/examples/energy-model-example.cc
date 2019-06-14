@@ -154,7 +154,7 @@ int main (int argc, char *argv[])
   basicSourceHelper.Set ("BasicEnergySourceInitialEnergyJ", DoubleValue (10000)); // Energy in J
   basicSourceHelper.Set ("BasicEnergySupplyVoltageV", DoubleValue (3.3));
 
-  radioEnergyHelper.Set ("StandbyCurrentA", DoubleValue (0.0014));
+  radioEnergyHelper.Set ("IdleCurrentA", DoubleValue (0.0014));
   radioEnergyHelper.Set ("TxCurrentA", DoubleValue (0.028));
   radioEnergyHelper.Set ("SleepCurrentA", DoubleValue (0.0000015));
   radioEnergyHelper.Set ("RxCurrentA", DoubleValue (0.0112));
