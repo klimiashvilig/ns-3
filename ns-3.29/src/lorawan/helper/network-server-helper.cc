@@ -19,7 +19,7 @@
  */
 
 #include "ns3/network-server-helper.h"
-#include "ns3/network-controller-components.h"
+#include "ns3/simple-network-server.h"
 #include "ns3/double.h"
 #include "ns3/string.h"
 #include "ns3/trace-source-accessor.h"
@@ -27,13 +27,12 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("NetworkServerHelper");
 
 NetworkServerHelper::NetworkServerHelper ()
 {
-  m_factory.SetTypeId ("ns3::NetworkServer");
+  m_factory.SetTypeId ("ns3::SimpleNetworkServer");
   p2pHelper.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
   p2pHelper.SetChannelAttribute ("Delay", StringValue ("2ms"));
 }
@@ -83,7 +82,7 @@ NetworkServerHelper::InstallPriv (Ptr<Node> node)
 {
   NS_LOG_FUNCTION (this << node);
 
-  Ptr<NetworkServer> app = m_factory.Create<NetworkServer> ();
+  Ptr<SimpleNetworkServer> app = m_factory.Create<SimpleNetworkServer> ();
 
   app->SetNode (node);
   node->AddApplication (app);
@@ -101,37 +100,18 @@ NetworkServerHelper::InstallPriv (Ptr<Node> node)
       app->AddGateway (*i, container.Get (0));
     }
 
-  // Link the NetworkServer to its NetDevices
+  // Link the SimpleNetworkServer to its NetDevices
   for (uint32_t i = 0; i < node->GetNDevices (); i++)
     {
       Ptr<NetDevice> currentNetDevice = node->GetDevice (i);
       currentNetDevice->SetReceiveCallback (MakeCallback
-                                              (&NetworkServer::Receive,
+                                              (&SimpleNetworkServer::Receive,
                                               app));
     }
 
   // Add the end devices
   app->AddNodes (m_endDevices);
 
-  // Add components to the NetworkServer
-  InstallComponents (app);
-
   return app;
-}
-
-void
-NetworkServerHelper::InstallComponents (Ptr<NetworkServer> netServer)
-{
-  NS_LOG_FUNCTION (this << netServer);
-
-  // Add Confirmed Messages support
-  Ptr<ConfirmedMessagesComponent> ackSupport =
-    CreateObject<ConfirmedMessagesComponent> ();
-  netServer->AddComponent (ackSupport);
-
-  // Add LinkCheck support
-  Ptr<LinkCheckComponent> linkCheckSupport = CreateObject<LinkCheckComponent> ();
-  netServer->AddComponent (linkCheckSupport);
-}
 }
 } // namespace ns3

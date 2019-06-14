@@ -28,7 +28,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("PeriodicSenderHelper");
 
@@ -36,8 +35,8 @@ PeriodicSenderHelper::PeriodicSenderHelper ()
 {
   m_factory.SetTypeId ("ns3::PeriodicSender");
 
-  // m_factory.Set ("PacketSizeRandomVariable", StringValue
-  //                  ("ns3::ParetoRandomVariable[Bound=10|Shape=2.5]"));
+  m_factory.Set ("PacketSize", StringValue
+                   ("ns3::ParetoRandomVariable[Bound=10|Shape=2.5]"));
 
   m_initialDelay = CreateObject<UniformRandomVariable> ();
   m_initialDelay->SetAttribute ("Min", DoubleValue (0));
@@ -45,9 +44,21 @@ PeriodicSenderHelper::PeriodicSenderHelper ()
   m_intervalProb = CreateObject<UniformRandomVariable> ();
   m_intervalProb->SetAttribute ("Min", DoubleValue (0));
   m_intervalProb->SetAttribute ("Max", DoubleValue (1));
+}
 
-  m_pktSize = 10;
-  m_pktSizeRV = 0;
+PeriodicSenderHelper::PeriodicSenderHelper (int fileSize)
+{
+  m_factory.SetTypeId ("ns3::PeriodicSender");
+
+  std::string str = "ns3::ConstantRandomVariable[Constant=" + std::to_string(fileSize) + "]";
+  m_factory.Set ("PacketSize", StringValue(str));
+
+  m_initialDelay = CreateObject<UniformRandomVariable> ();
+  m_initialDelay->SetAttribute ("Min", DoubleValue (0));
+
+  m_intervalProb = CreateObject<UniformRandomVariable> ();
+  m_intervalProb->SetAttribute ("Min", DoubleValue (0));
+  m_intervalProb->SetAttribute ("Max", DoubleValue (1));
 }
 
 PeriodicSenderHelper::~PeriodicSenderHelper ()
@@ -104,26 +115,15 @@ PeriodicSenderHelper::InstallPriv (Ptr<Node> node) const
         {
           interval = Hours (1);
         }
-      else
-        {
-          interval = Minutes (30);
-        }
+      else interval = Minutes (30);
     }
-  else
-    {
-      interval = m_period;
-    }
+  else interval = m_period;
 
   app->SetInterval (interval);
   NS_LOG_DEBUG ("Created an application with interval = " <<
                 interval.GetHours () << " hours");
 
   app->SetInitialDelay (Seconds (m_initialDelay->GetValue (0, interval.GetSeconds ())));
-  app->SetPacketSize (m_pktSize);
-  if (m_pktSizeRV)
-    {
-      app->SetPacketSizeRandomVariable (m_pktSizeRV);
-    }
 
   app->SetNode (node);
   node->AddApplication (app);
@@ -135,19 +135,5 @@ void
 PeriodicSenderHelper::SetPeriod (Time period)
 {
   m_period = period;
-}
-
-void
-PeriodicSenderHelper::SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv)
-{
-  m_pktSizeRV = rv;
-}
-
-void
-PeriodicSenderHelper::SetPacketSize (uint8_t size)
-{
-  m_pktSize = size;
-}
-
 }
 } // namespace ns3

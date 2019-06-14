@@ -25,15 +25,15 @@
 #include "ns3/lora-tag.h"
 
 namespace ns3 {
-namespace lorawan {
 
 class GatewayLoraMac : public LoraMac
 {
 public:
+
   static TypeId GetTypeId (void);
 
-  GatewayLoraMac ();
-  virtual ~GatewayLoraMac ();
+  GatewayLoraMac();
+  virtual ~GatewayLoraMac();
 
   // Implementation of the LoraMac interface
   virtual void Send (Ptr<Packet> packet);
@@ -45,9 +45,6 @@ public:
   virtual void Receive (Ptr<Packet const> packet);
 
   // Implementation of the LoraMac interface
-  virtual void FailedReception (Ptr<Packet const> packet);
-
-  // Implementation of the LoraMac interface
   virtual void TxFinished (Ptr<Packet const> packet);
 
   /**
@@ -57,10 +54,11 @@ public:
    */
   Time GetWaitingTime (double frequency);
 private:
+
 protected:
+
 };
 
 } /* namespace ns3 */
 
-}
 #endif /* GATEWAY_LORA_MAC_H */

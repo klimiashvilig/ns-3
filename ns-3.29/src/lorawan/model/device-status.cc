@@ -23,7 +23,6 @@
 #include <algorithm>
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("DeviceStatus");
 
@@ -92,9 +91,7 @@ DeviceStatus::GetBestGatewayAddress (void)
   return (*(std::max_element (m_gateways.begin (), m_gateways.end (),
                               [] (const std::pair<Address, double>&p1,
                                   const std::pair<Address, double>&p2)
-      {
-        return p1.second > p2.second;
-      }
+                              { return p1.second > p2.second; }
                               ))).first;
 }
 
@@ -114,9 +111,7 @@ DeviceStatus::GetSortedGatewayAddresses (void)
   std::sort (pairs.begin (), pairs.end (),
              [] (const std::pair<Address, double>&p1,
                  const std::pair<Address, double>&p2)
-      {
-        return p1.second > p2.second;
-      }
+             { return p1.second > p2.second; }
              );
 
   // Create a new array with only the addresses
@@ -133,7 +128,7 @@ DeviceStatus::GetSortedGatewayAddresses (void)
 bool
 DeviceStatus::HasReply (void)
 {
-  NS_LOG_FUNCTION (this << m_reply.hasReply);
+  NS_LOG_FUNCTION (this);
 
   return m_reply.hasReply;
 }
@@ -199,5 +194,4 @@ DeviceStatus::GetSecondReceiveWindowDataRate (void)
   return m_mac->GetSecondReceiveWindowDataRate ();
 }
 
-}
 }

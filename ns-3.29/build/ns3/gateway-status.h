@@ -27,16 +27,14 @@
 #include "ns3/gateway-lora-mac.h"
 
 namespace ns3 {
-namespace lorawan {
 
-class GatewayStatus : public Object
+class GatewayStatus
 {
 public:
-  static TypeId GetTypeId (void);
 
   GatewayStatus ();
-  GatewayStatus (Address address, Ptr<NetDevice> netDevice, Ptr<GatewayLoraMac> gwMac);
   virtual ~GatewayStatus ();
+  GatewayStatus (Address address, Ptr<NetDevice> netDevice, Ptr<GatewayLoraMac> gwMac);
 
   /**
    * Get this gateway's P2P link address.
@@ -49,12 +47,12 @@ public:
   void SetAddress (Address address);
 
   /**
-   * Get the NetDevice through which it's possible to contact this gateway from the server.
+   * Get the NetDevice through which it's possible to contact this gateway.
    */
   Ptr<NetDevice> GetNetDevice ();
 
   /**
-   * Set the NetDevice through which it's possible to contact this gateway from the server.
+   * Set the NetDevice through which it's possible to contact this gateway.
    */
   void SetNetDevice (Ptr<NetDevice> netDevice);
 
@@ -66,7 +64,7 @@ public:
   /**
    * Set a pointer to this gateway's MAC instance.
    */
-  // void SetGatewayMac (Ptr<GatewayLoraMac> gwMac);
+  void SetGatewayMac (Ptr<GatewayLoraMac> gwMac);
 
   /**
    * Query whether or not this gateway is available for immediate transmission
@@ -79,18 +77,21 @@ public:
   bool IsAvailableForTransmission (double frequency);
 
   void SetNextTransmissionTime (Time nextTransmissionTime);
-  // Time GetNextTransmissionTime (void);
+  Time GetNextTransmissionTime (void);
 
 private:
-  Address m_address;   //!< The Address of the P2PNetDevice of this gateway
 
-  Ptr<NetDevice> m_netDevice;     //!< The NetDevice through which to reach this gateway from the server
+  Address m_address; //!< The Address of the P2PNetDevice of this gateway
 
-  Ptr<GatewayLoraMac> m_gatewayMac;     //!< The Mac layer of the gateway
+  Ptr<NetDevice> m_netDevice;   //!< The NetDevice through which to reach this gateway
 
-  Time m_nextTransmissionTime;   //!< This gateway's next transmission time
+  Ptr<GatewayLoraMac> m_gatewayMac;   //!< The Mac layer of the gateway
+
+  bool m_isTransmitting; //!< Whether this gateway is already booked for
+                         //!transmission or not
+
+  Time m_nextTransmissionTime; //!< This gateway's next transmission time
 };
 }
 
-}
 #endif /* DEVICE_STATUS_H */

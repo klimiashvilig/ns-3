@@ -22,7 +22,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("SubBand");
 
@@ -105,6 +104,5 @@ double
 SubBand::GetMaxTxPowerDbm (void)
 {
   return m_maxTxPowerDbm;
-}
 }
 }

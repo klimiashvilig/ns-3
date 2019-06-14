@@ -31,26 +31,26 @@
 #include "ns3/net-device.h"
 #include "ns3/lora-interference-helper.h"
 #include <list>
+//#include "lora-state-helper.h"
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraChannel;
 class LoraStateHelper;
 
 /**
- * Structure to collect all parameters that are used to compute the duration of
- * a packet (excluding payload length).
- */
+  * Structure to collect all parameters that are used to compute the duration of
+  * a packet (excluding payload length).
+  */
 struct LoraTxParameters
 {
-  uint8_t sf = 7;     //!< Spreading Factor
-  bool headerDisabled = 0;     //!< Whether to use implicit header mode
-  uint8_t codingRate = 1;     //!< Code rate (obtained as 4/(codingRate+4))
-  double bandwidthHz = 125000;     //!< Bandwidth in Hz
-  uint32_t nPreamble = 8;     //!< Number of preamble symbols
-  bool crcEnabled = 1;     //!< Whether Cyclic Redundancy Check is enabled
-  bool lowDataRateOptimizationEnabled = 0;     //!< Whether Low Data Rate Optimization is enabled
+  uint8_t sf = 7; //!< Spreading Factor
+  bool headerDisabled = 0; //!< Whether to use implicit header mode
+  uint8_t codingRate = 1; //!< Code rate (obtained as 4/(codingRate+4))
+  double bandwidthHz = 125000; //!< Bandwidth in Hz
+  uint32_t nPreamble = 8; //!< Number of preamble symbols
+  bool crcEnabled = 1; //!< Whether Cyclic Redundancy Check is enabled
+  bool lowDataRateOptimizationEnabled = 0; //!< Whether Low Data Rate Optimization is enabled
 };
 
 /**
@@ -119,7 +119,9 @@ public:
    * Notify listeners that we went to Idle
    */
   virtual void NotifyIdle (void) = 0;
-
+  /**
+   * Notify listeners that we woke up
+   */
   virtual void NotifyWakeup (void) = 0;
 };
 
@@ -128,11 +130,24 @@ class LoraPhy : public Object
 public:
   enum State
   {
+    /**
+     * The PHY layer is IDLE.
+     */
     IDLE,
+    /**
+     * The PHY layer is sending a packet.
+     */
     TX,
+    /**
+     * The PHY layer is receiving a packet.
+     */
     RX,
+    /**
+     * The PHY layer is sleeping.
+     */
     SLEEP
   };
+  
   // TypeId
   static TypeId GetTypeId (void);
 
@@ -149,14 +164,6 @@ public:
    * correct reception events.
    */
   typedef Callback<void, Ptr<const Packet> > RxOkCallback;
-
-  /**
-   * Type definition for a callback for when a packet reception fails.
-   *
-   * This callback can be set by an upper layer that wishes to be informed of
-   * failed reception events.
-   */
-  typedef Callback<void, Ptr<const Packet> > RxFailedCallback;
 
   /**
    * Type definition for a callback to call when a packet has finished sending.
@@ -234,15 +241,6 @@ public:
   void SetReceiveOkCallback (RxOkCallback callback);
 
   /**
-   * Set the callback to call upon failed reception of a packet we were
-   * previously locked on.
-   *
-   * This method is typically called by an upper MAC layer that wants to be
-   * notified after the failed reception of a packet.
-   */
-  void SetReceiveFailedCallback (RxFailedCallback callback);
-
-  /**
    * Set the callback to call after transmission of a packet.
    *
    * This method is typically called by an upper MAC layer that wants to be
@@ -308,7 +306,13 @@ public:
    */
   static Time GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams);
 
-  void RegisterListener(LoraPhyListener *listener);
+  /**
+   * \param listener the new listener
+   *
+   * Add the input listener to the list of objects to be notified of
+   * PHY-level events.
+   */
+  void RegisterListener (LoraPhyListener *listener);
 
   Ptr<LoraStateHelper> GetStateHelper(void);
 
@@ -323,7 +327,7 @@ protected:
   Ptr<LoraChannel> m_channel; //!< The channel this PHY transmits on.
 
   LoraInterferenceHelper m_interference; //!< The LoraInterferenceHelper
-  //!associated to this PHY.
+                                         //!associated to this PHY.
 
   // Trace sources
 
@@ -380,19 +384,13 @@ protected:
   RxOkCallback m_rxOkCallback;
 
   /**
-   * The callback to perform upon failed reception of a packet we were locked on.
-   */
-  RxFailedCallback m_rxFailedCallback;
-
-  /**
    * The callback to perform upon the end of a transmission.
    */
   TxFinishedCallback m_txFinishedCallback;
 
-  Ptr<LoraStateHelper> m_state;
+  Ptr<LoraStateHelper> m_state;     //!< Pointer to LoraStateHelper
 };
 
 } /* namespace ns3 */
 
-}
 #endif /* LORA_PHY_H */

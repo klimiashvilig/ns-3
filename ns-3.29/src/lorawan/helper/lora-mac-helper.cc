@@ -20,17 +20,15 @@
 
 #include "ns3/lora-mac-helper.h"
 #include "ns3/gateway-lora-phy.h"
-#include "ns3/end-device-lora-phy.h"
 #include "ns3/lora-net-device.h"
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraMacHelper");
 
-LoraMacHelper::LoraMacHelper ()
-  : m_region (LoraMacHelper::EU)
+LoraMacHelper::LoraMacHelper () :
+  m_region (LoraMacHelper::EU)
 {
 }
 
@@ -189,9 +187,7 @@ LoraMacHelper::ConfigureForEuRegion (Ptr<GatewayLoraMac> gwMac) const
       while (receptionPaths < maxReceptionPaths)
         {
           if (it == frequencies.end ())
-            {
-              it = frequencies.begin ();
-            }
+            it = frequencies.begin ();
           gwPhy->GetObject<GatewayLoraPhy> ()->AddReceptionPath (*it);
           ++it;
           receptionPaths++;
@@ -237,12 +233,11 @@ LoraMacHelper::ApplyCommonEuConfigurations (Ptr<LoraMac> loraMac) const
 
 }
 
-std::vector<int>
+void
 LoraMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer gateways, Ptr<LoraChannel> channel)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  std::vector<int> sfQuantity (7,0);
   for (NodeContainer::Iterator j = endDevices.Begin (); j != endDevices.End (); ++j)
     {
       Ptr<Node> object = *j;
@@ -280,52 +275,6 @@ LoraMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer ga
       // NS_LOG_DEBUG ("Rx Power: " << highestRxPower);
       double rxPower = highestRxPower;
 
-      // Get the ED sensitivity
-      Ptr<EndDeviceLoraPhy> edPhy = loraNetDevice->GetPhy ()->GetObject<EndDeviceLoraPhy> ();
-      const double *edSensitivity = edPhy->sensitivity;
-
-
-      if (rxPower > *edSensitivity)
-        {
-          mac->SetDataRate (5);
-          sfQuantity[0] = sfQuantity[0] + 1;
-        }
-      else if (rxPower > *(edSensitivity + 1))
-        {
-          mac->SetDataRate (4);
-          sfQuantity[1] = sfQuantity[1] + 1;
-        }
-      else if (rxPower > *(edSensitivity + 2))
-        {
-          mac->SetDataRate (3);
-          sfQuantity[2] = sfQuantity[2] + 1;
-        }
-      else if (rxPower > *(edSensitivity + 3))
-        {
-          mac->SetDataRate (2);
-          sfQuantity[3] = sfQuantity[3] + 1;
-        }
-      else if (rxPower > *(edSensitivity + 4))
-        {
-          mac->SetDataRate (1);
-          sfQuantity[4] = sfQuantity[4] + 1;
-        }
-      else if (rxPower > *(edSensitivity + 5))
-        {
-          mac->SetDataRate (0);
-          sfQuantity[5] = sfQuantity[5] + 1;
-        }
-      else // Device is out of range. Assign SF12.
-        {
-          // NS_LOG_DEBUG ("Device out of range");
-          mac->SetDataRate (0);
-          sfQuantity[6] = sfQuantity[6] + 1;
-          // NS_LOG_DEBUG ("sfQuantity[6] = " << sfQuantity[6]);
-
-        }
-
-/*
-
       // Get the Gw sensitivity
       Ptr<NetDevice> gatewayNetDevice = bestGateway->GetDevice (0);
       Ptr<LoraNetDevice> gatewayLoraNetDevice = gatewayNetDevice->GetObject<LoraNetDevice> ();
@@ -335,50 +284,31 @@ LoraMacHelper::SetSpreadingFactorsUp (NodeContainer endDevices, NodeContainer ga
       if(rxPower > *gwSensitivity)
         {
           mac->SetDataRate (5);
-          sfQuantity[0] = sfQuantity[0] + 1;
-
         }
       else if (rxPower > *(gwSensitivity+1))
         {
           mac->SetDataRate (4);
-          sfQuantity[1] = sfQuantity[1] + 1;
-
         }
       else if (rxPower > *(gwSensitivity+2))
         {
           mac->SetDataRate (3);
-          sfQuantity[2] = sfQuantity[2] + 1;
-
         }
       else if (rxPower > *(gwSensitivity+3))
         {
           mac->SetDataRate (2);
-          sfQuantity[3] = sfQuantity[3] + 1;
         }
       else if (rxPower > *(gwSensitivity+4))
         {
           mac->SetDataRate (1);
-          sfQuantity[4] = sfQuantity[4] + 1;
         }
       else if (rxPower > *(gwSensitivity+5))
         {
           mac->SetDataRate (0);
-          sfQuantity[5] = sfQuantity[5] + 1;
-
         }
       else // Device is out of range. Assign SF12.
         {
           mac->SetDataRate (0);
-          sfQuantity[6] = sfQuantity[6] + 1;
-
         }
-        */
-
-    } // end loop on nodes
-
-  return sfQuantity;
-
-} //  end function
-
+    }
 }
-} //end class
+}

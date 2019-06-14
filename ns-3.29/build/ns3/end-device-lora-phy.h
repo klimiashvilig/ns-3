@@ -15,9 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Authors: Davide Magrin <magrinda@dei.unipd.it>,
- *          Michele Luvisotto <michele.luvisotto@dei.unipd.it>
- *          Stefano Romagnolo <romagnolostefano93@gmail.com>
+ * Author: Davide Magrin <magrinda@dei.unipd.it>
  */
 
 #ifndef END_DEVICE_LORA_PHY_H
@@ -32,54 +30,8 @@
 #include "ns3/lora-phy.h"
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraChannel;
-
-/**
- * Receive notifications about PHY events.
- */
-class EndDeviceLoraPhyListener
-{
-public:
-  virtual ~EndDeviceLoraPhyListener ();
-
-  /**
-   * We have received the first bit of a packet. We decided
-   * that we could synchronize on this packet. It does not mean
-   * we will be able to successfully receive completely the
-   * whole packet. It means that we will report a BUSY status until
-   * one of the following happens:
-   *   - NotifyRxEndOk
-   *   - NotifyRxEndError
-   *   - NotifyTxStart
-   *
-   * \param duration the expected duration of the packet reception.
-   */
-  virtual void NotifyRxStart () = 0;
-
-  /**
-   * We are about to send the first bit of the packet.
-   * We do not send any event to notify the end of
-   * transmission. Listeners should assume that the
-   * channel implicitely reverts to the idle state
-   * unless they have received a cca busy report.
-   *
-   * \param duration the expected transmission duration.
-   * \param txPowerDbm the nominal tx power in dBm
-   */
-  virtual void NotifyTxStart (double txPowerDbm) = 0;
-
-  /**
-   * Notify listeners that we went to sleep
-   */
-  virtual void NotifySleep (void) = 0;
-
-  /**
-   * Notify listeners that we woke up
-   */
-  virtual void NotifyIdle (void) = 0;
-};
 
 /**
  * Class representing a LoRa transceiver.
@@ -96,10 +48,6 @@ public:
  * is delegateed to an upper layer, which can modify the state of the device
  * through the public SwitchToSleep and SwitchToStandby methods. In SLEEP
  * mode, the device cannot lock on a packet and start reception.
- *
- * Peculiarities about the error model and about how errors are handled are
- * supposed to be handled by classes extending this one, like
- * SimpleEndDeviceLoraPhy or SpectrumEndDeviceLoraPhy. These classes need to
  */
 class EndDeviceLoraPhy : public LoraPhy
 {
@@ -123,7 +71,7 @@ public:
      * When the PHY is in this state, it's listening to the channel, and
      * it's also ready to transmit data passed to it by the MAC layer.
      */
-    IDLE,
+    STANDBY,
 
     /**
      * The PHY layer is sending a packet.
@@ -148,15 +96,15 @@ public:
 
   // Implementation of LoraPhy's pure virtual functions
   virtual void StartReceive (Ptr<Packet> packet, double rxPowerDbm,
-                             uint8_t sf, Time duration, double frequencyMHz) = 0;
+                             uint8_t sf, Time duration, double frequencyMHz);
 
   // Implementation of LoraPhy's pure virtual functions
   virtual void EndReceive (Ptr<Packet> packet,
-                           Ptr<LoraInterferenceHelper::Event> event) = 0;
+                           Ptr<LoraInterferenceHelper::Event> event);
 
   // Implementation of LoraPhy's pure virtual functions
   virtual void Send (Ptr<Packet> packet, LoraTxParameters txParams,
-                     double frequencyMHz, double txPowerDbm) = 0;
+                     double frequencyMHz, double txPowerDbm);
 
   // Implementation of LoraPhy's pure virtual functions
   virtual bool IsOnFrequency (double frequencyMHz);
@@ -199,44 +147,33 @@ public:
   EndDeviceLoraPhy::State GetState (void);
 
   /**
-   * Switch to the IDLE state.
+   * Switch to the STANDBY state.
    */
-  void SwitchToIdle (void);
+  void SwitchToStandby (void);
 
   /**
    * Switch to the SLEEP state.
    */
   void SwitchToSleep (void);
 
-  /**
-   * Add the input listener to the list of objects to be notified of PHY-level
-   * events.
-   *
-   * \param listener the new listener
-   */
-  void RegisterListener (EndDeviceLoraPhyListener *listener);
-
-  /**
-   * Remove the input listener from the list of objects to be notified of
-   * PHY-level events.
-   *
-   * \param listener the listener to be unregistered
-   */
-  void UnregisterListener (EndDeviceLoraPhyListener *listener);
-
-  static const double sensitivity[6]; //!< The sensitivity vector of this device to different SFs
-
-
-protected:
+private:
   /**
    * Switch to the RX state
    */
-  void SwitchToRx ();
+  void SwitchToRx (void);
 
   /**
    * Switch to the TX state
    */
-  void SwitchToTx (double txPowerDbm);
+  void SwitchToTx (void);
+
+  //Added
+  void SwitchHelperToTx(Time txDuration, double txPowerDbm);
+  void SwitchHelperToRx(Time rxDuration);
+  void SwitchHelperFromRxEndOk(Ptr<Packet> packet);
+  void SwitchHelperFromRxEndError(Ptr<Packet> packet);
+  void SwitchHelperToSleep(void);
+  void SwitchHelperFromSleep(Time duration);
 
   /**
    * Trace source for when a packet is lost because it was using a SF different from
@@ -253,25 +190,14 @@ protected:
 
   TracedValue<State> m_state; //!< The state this PHY is currently in.
 
-  // static const double sensitivity[6]; //!< The sensitivity vector of this device to different SFs
+  static const double sensitivity[6]; //!< The sensitivity vector of this device to different SFs
 
   double m_frequency; //!< The frequency this device is listening on
 
   uint8_t m_sf; //!< The Spreading Factor this device is listening for
 
-  /**
-   * typedef for a list of EndDeviceLoraPhyListener
-   */
-  typedef std::vector<EndDeviceLoraPhyListener *> Listeners;
-  /**
-   * typedef for a list of EndDeviceLoraPhyListener iterator
-   */
-  typedef std::vector<EndDeviceLoraPhyListener *>::iterator ListenersI;
-
-  Listeners m_listeners; //!< PHY listeners
 };
 
 } /* namespace ns3 */
 
-}
 #endif /* END_DEVICE_LORA_PHY_H */

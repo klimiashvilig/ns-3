@@ -23,15 +23,11 @@
 #include "ns3/sub-band.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraPhyHelper");
 
 LoraPhyHelper::LoraPhyHelper ()
-  : m_maxReceptionPaths (8),
-  m_txPriority (true)
 {
-  NS_LOG_FUNCTION (this);
 }
 
 void
@@ -48,19 +44,12 @@ LoraPhyHelper::SetDeviceType (enum DeviceType dt)
   switch (dt)
     {
     case GW:
-      m_phy.SetTypeId ("ns3::SimpleGatewayLoraPhy");
+      m_phy.SetTypeId ("ns3::GatewayLoraPhy");
       break;
     case ED:
-      m_phy.SetTypeId ("ns3::SimpleEndDeviceLoraPhy");
+      m_phy.SetTypeId ("ns3::EndDeviceLoraPhy");
       break;
     }
-}
-
-TypeId
-LoraPhyHelper::GetDeviceType (void) const
-{
-  NS_LOG_FUNCTION (this);
-  return m_phy.GetTypeId ();
 }
 
 void
@@ -72,7 +61,7 @@ LoraPhyHelper::Set (std::string name, const AttributeValue &v)
 Ptr<LoraPhy>
 LoraPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
 {
-  NS_LOG_FUNCTION (this << node->GetId () << device);
+  NS_LOG_FUNCTION (this << node << device);
 
   // Create the PHY and set its channel
   Ptr<LoraPhy> phy = m_phy.Create<LoraPhy> ();
@@ -80,7 +69,7 @@ LoraPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
 
   // Configuration is different based on the kind of device we have to create
   std::string typeId = m_phy.GetTypeId ().GetName ();
-  if (typeId == "ns3::SimpleGatewayLoraPhy")
+  if (typeId == "ns3::GatewayLoraPhy")
     {
       // Inform the channel of the presence of this PHY
       m_channel->Add (phy);
@@ -101,21 +90,18 @@ LoraPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
       std::vector<double>::iterator it = frequencies.begin ();
 
       int receptionPaths = 0;
-      // Set maxReceptionPaths as a parameter
-      // int maxReceptionPaths = 8;
-      while (receptionPaths < m_maxReceptionPaths)
+      int maxReceptionPaths = 8;
+      while (receptionPaths < maxReceptionPaths)
         {
           if (it == frequencies.end ())
-            {
-              it = frequencies.begin ();
-            }
-          phy->GetObject<SimpleGatewayLoraPhy> ()->AddReceptionPath (*it);
+            it = frequencies.begin ();
+          phy->GetObject<GatewayLoraPhy> ()->AddReceptionPath (*it);
           ++it;
           receptionPaths++;
         }
 
     }
-  else if (typeId == "ns3::SimpleEndDeviceLoraPhy")
+  else if (typeId == "ns3::EndDeviceLoraPhy")
     {
       // The line below can be commented to speed up uplink-only simulations.
       // This implies that the LoraChannel instance will only know about
@@ -129,19 +115,5 @@ LoraPhyHelper::Create (Ptr<Node> node, Ptr<NetDevice> device) const
   phy->SetDevice (device);
 
   return phy;
-}
-
-void
-LoraPhyHelper::SetMaxReceptionPaths (int maxReceptionPaths)
-{
-  NS_LOG_FUNCTION (this << maxReceptionPaths);
-  m_maxReceptionPaths = maxReceptionPaths;
-}
-
-void
-LoraPhyHelper::SetGatewayTransmissionPriority (bool txPriority)
-{
-  m_txPriority = txPriority;
-}
 }
 }

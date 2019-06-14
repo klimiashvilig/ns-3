@@ -23,7 +23,6 @@
 #include <bitset>
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraMacHeader");
 
@@ -56,7 +55,7 @@ LoraMacHeader::GetSerializedSize (void) const
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  return 1;       // This header only consists in 8 bits
+  return 1;   // This header only consists in 8 bits
 }
 
 void
@@ -78,7 +77,7 @@ LoraMacHeader::Serialize (Buffer::Iterator start) const
   // Write the byte
   start.WriteU8 (header);
 
-  NS_LOG_DEBUG ("Serialization of MAC header: " << std::bitset<8> (header));
+  NS_LOG_DEBUG ("Serialization of MAC header: " << std::bitset<8>(header));
 }
 
 uint32_t
@@ -97,7 +96,7 @@ LoraMacHeader::Deserialize (Buffer::Iterator start)
   // to get the MType
   m_mtype = byte >> 5;
 
-  return 1;       // the number of bytes consumed.
+  return 1;   // the number of bytes consumed.
 }
 
 void
@@ -110,7 +109,7 @@ LoraMacHeader::Print (std::ostream &os) const
 void
 LoraMacHeader::SetMType (enum MType mtype)
 {
-  NS_LOG_FUNCTION (this << mtype);
+  NS_LOG_FUNCTION_NOARGS ();
 
   m_mtype = mtype;
 }
@@ -146,18 +145,8 @@ LoraMacHeader::IsUplink (void) const
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  return (m_mtype == JOIN_REQUEST)
-         || (m_mtype == UNCONFIRMED_DATA_UP)
-         || (m_mtype == CONFIRMED_DATA_UP);
-}
-
-bool
-LoraMacHeader::IsConfirmed (void) const
-{
-  NS_LOG_FUNCTION_NOARGS ();
-
-  return (m_mtype == CONFIRMED_DATA_DOWN)
-         || (m_mtype == CONFIRMED_DATA_UP);
-}
+  return (m_mtype == JOIN_REQUEST) ||
+         (m_mtype == UNCONFIRMED_DATA_UP) ||
+         (m_mtype == CONFIRMED_DATA_UP);
 }
 }

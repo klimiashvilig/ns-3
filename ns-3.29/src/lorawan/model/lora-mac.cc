@@ -22,7 +22,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraMac");
 
@@ -34,11 +33,6 @@ LoraMac::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::LoraMac")
     .SetParent<Object> ()
     .SetGroupName ("lorawan")
-    .AddTraceSource ("SentNewPacket",
-                     "Trace source indicating a new packet "
-                     "arrived at the MAC layer",
-                     MakeTraceSourceAccessor (&LoraMac::m_sentNewPacket),
-                     "ns3::Packet::TracedCallback")
     .AddTraceSource ("ReceivedPacket",
                      "Trace source indicating a packet "
                      "was correctly received at the MAC layer",
@@ -57,8 +51,7 @@ LoraMac::LoraMac ()
   NS_LOG_FUNCTION (this);
 }
 
-LoraMac::~LoraMac ()
-{
+LoraMac::~LoraMac () {
   NS_LOG_FUNCTION (this);
 }
 
@@ -88,7 +81,6 @@ LoraMac::SetPhy (Ptr<LoraPhy> phy)
 
   // Connect the receive callbacks
   m_phy->SetReceiveOkCallback (MakeCallback (&LoraMac::Receive, this));
-  m_phy->SetReceiveFailedCallback (MakeCallback (&LoraMac::FailedReception, this));
   m_phy->SetTxFinishedCallback (MakeCallback (&LoraMac::TxFinished, this));
 }
 
@@ -185,6 +177,5 @@ void
 LoraMac::SetReplyDataRateMatrix (ReplyDataRateMatrix replyDataRateMatrix)
 {
   m_replyDataRateMatrix = replyDataRateMatrix;
-}
 }
 }

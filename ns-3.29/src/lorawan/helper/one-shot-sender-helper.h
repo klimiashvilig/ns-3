@@ -32,7 +32,6 @@
 #include <string>
 
 namespace ns3 {
-namespace lorawan {
 
 /**
  * This class can be used to install OneShotSender applications on multiple
@@ -64,5 +63,4 @@ private:
 
 } // namespace ns3
 
-}
 #endif /* ONE_SHOT_SENDER_HELPER_H */

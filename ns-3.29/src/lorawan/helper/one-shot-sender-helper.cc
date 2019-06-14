@@ -27,7 +27,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("OneShotSenderHelper");
 
@@ -41,7 +40,7 @@ OneShotSenderHelper::~OneShotSenderHelper ()
 }
 
 void
-OneShotSenderHelper::SetSendTime (Time sendTime)
+OneShotSenderHelper::SetSendTime (Time sendTime)// change to setfilesize
 {
   m_sendTime = sendTime;
 }
@@ -74,16 +73,15 @@ OneShotSenderHelper::Install (NodeContainer c) const
 Ptr<Application>
 OneShotSenderHelper::InstallPriv (Ptr<Node> node) const
 {
-  NS_LOG_FUNCTION (this << node->GetId ());
+  NS_LOG_FUNCTION (this << node);
 
   Ptr<OneShotSender> app = m_factory.Create<OneShotSender> ();
 
-  app->SetSendTime (m_sendTime);
+  app->SetSendTime (m_sendTime); // change
 
   app->SetNode (node);
   node->AddApplication (app);
 
   return app;
-}
 }
 } // namespace ns3

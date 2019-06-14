@@ -28,7 +28,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("ForwarderHelper");
 
@@ -105,6 +104,5 @@ ForwarderHelper::InstallPriv (Ptr<Node> node) const
     }
 
   return app;
-}
 }
 } // namespace ns3

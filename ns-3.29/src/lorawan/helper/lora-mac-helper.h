@@ -31,11 +31,11 @@
 #include "ns3/node-container.h"
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraMacHelper
 {
 public:
+
   /**
    * Define the kind of device. Can be either GW (Gateway) or ED (End Device).
    */
@@ -110,11 +110,12 @@ public:
    * SF11 -> DR1
    * SF12 -> DR0
    */
-  static std::vector<int> SetSpreadingFactorsUp (NodeContainer endDevices,
-                                                 NodeContainer gateways,
-                                                 Ptr<LoraChannel> channel);
+  static void SetSpreadingFactorsUp (NodeContainer endDevices,
+                                     NodeContainer gateways,
+                                     Ptr<LoraChannel> channel);
 
 private:
+
   /**
    * Perform region-specific configurations for the 868 MHz EU band.
    */
@@ -139,5 +140,4 @@ private:
 
 } //namespace ns3
 
-}
 #endif /* LORA_PHY_HELPER_H */

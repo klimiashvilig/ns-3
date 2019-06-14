@@ -23,21 +23,13 @@
 #include "ns3/simulator.h"
 #include "ns3/lora-tag.h"
 #include "ns3/log.h"
+#include "ns3/lora-state-helper.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("EndDeviceLoraPhy");
 
 NS_OBJECT_ENSURE_REGISTERED (EndDeviceLoraPhy);
-
-/**************************
- *  Listener destructor  *
- *************************/
-
-EndDeviceLoraPhyListener::~EndDeviceLoraPhyListener ()
-{
-}
 
 TypeId
 EndDeviceLoraPhy::GetTypeId (void)
@@ -45,6 +37,7 @@ EndDeviceLoraPhy::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::EndDeviceLoraPhy")
     .SetParent<LoraPhy> ()
     .SetGroupName ("lorawan")
+    .AddConstructor<EndDeviceLoraPhy> ()
     .AddTraceSource ("LostPacketBecauseWrongFrequency",
                      "Trace source indicating a packet "
                      "could not be correctly decoded because"
@@ -96,6 +89,260 @@ EndDeviceLoraPhy::GetSpreadingFactor (void)
   return m_sf;
 }
 
+void
+EndDeviceLoraPhy::Send (Ptr<Packet> packet, LoraTxParameters txParams,
+                        double frequencyMHz, double txPowerDbm)
+{
+  NS_LOG_FUNCTION (this << packet << txParams << frequencyMHz << txPowerDbm);
+
+  NS_LOG_INFO ("Current state: " << m_state);
+
+  // We must be either in STANDBY or SLEEP mode to send a packet
+  if (m_state != STANDBY && m_state != SLEEP)
+    {
+      NS_LOG_INFO ("Cannot send because device is currently not in STANDBY or SLEEP mode");
+      return;
+    }
+
+  // We can send the packet: switch to the TX state
+  SwitchToTx ();
+
+  // Compute the duration of the transmission
+  Time duration = GetOnAirTime (packet, txParams);
+
+  SwitchHelperToTx(duration, txPowerDbm);
+
+  // Tag the packet with information about its Spreading Factor
+  LoraTag tag;
+  packet->RemovePacketTag (tag);
+  tag.SetSpreadingFactor (txParams.sf);
+  packet->AddPacketTag (tag);
+
+  // Send the packet over the channel
+  NS_LOG_INFO ("Sending the packet in the channel");
+  m_channel->Send (this, packet, txPowerDbm, txParams, duration, frequencyMHz);
+
+  // Schedule the switch back to STANDBY mode.
+  // For reference see SX1272 datasheet, section 4.1.6
+  Simulator::Schedule (duration, &EndDeviceLoraPhy::SwitchToStandby, this);
+
+  // Schedule the txFinished callback, if it was set
+  // The call is scheduled just after the switch to standby in case the upper
+  // layer wishes to change the state. This ensures that it will find a PHY in
+  // STANDBY mode.
+  if (!m_txFinishedCallback.IsNull ())
+    {
+      Simulator::Schedule (duration + NanoSeconds (10),
+                           &EndDeviceLoraPhy::m_txFinishedCallback, this,
+                           packet);
+    }
+
+
+  // Call the trace source
+  if (m_device)
+    {
+      m_startSending (packet, m_device->GetNode ()->GetId ());
+    }
+  else
+    {
+      m_startSending (packet, 0);
+    }
+}
+
+void
+EndDeviceLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
+                                uint8_t sf, Time duration, double frequencyMHz)
+{
+
+  NS_LOG_FUNCTION (this << packet << rxPowerDbm << unsigned (sf) << duration <<
+                   frequencyMHz);
+
+  // Notify the LoraInterferenceHelper of the impinging signal, and remember
+  // the event it creates. This will be used then to correctly handle the end
+  // of reception event.
+  //
+  // We need to do this regardless of our state or frequency, since these could
+  // change (and making the interference relevant) while the interference is
+  // still incoming.
+
+  Ptr<LoraInterferenceHelper::Event> event;
+  event = m_interference.Add (duration, rxPowerDbm, sf, packet, frequencyMHz);
+
+  // Switch on the current PHY state
+  switch (m_state)
+    {
+    // In the SLEEP, TX and RX cases we cannot receive the packet: we only add
+    // it to the list of interferers and do not schedule an EndReceive event for
+    // it.
+    case SLEEP:
+      {
+        NS_LOG_INFO ("Dropping packet because device is in SLEEP state");
+        break;
+      }
+    case TX:
+      {
+        NS_LOG_INFO ("Dropping packet because device is in TX state");
+        break;
+      }
+    case RX:
+      {
+        NS_LOG_INFO ("Dropping packet because device is already in RX state");
+        break;
+      }
+    // If we are in STANDBY mode, we can potentially lock on the currently
+    // incoming transmission
+    case STANDBY:
+      {
+        // There are a series of properties the packet needs to respect in order
+        // for us to be able to lock on it:
+        // - It's on frequency we are listening on
+        // - It uses the SF we are configured to look for
+        // - Its receive power is above the device sensitivity for that SF
+
+        // Flag to signal whether we can receive the packet or not
+        bool canLockOnPacket = true;
+
+        // Save needed sensitivity
+        double sensitivity = EndDeviceLoraPhy::sensitivity[unsigned(sf)-7];
+
+        // Check frequency
+        //////////////////
+        if (!IsOnFrequency (frequencyMHz))
+          {
+            NS_LOG_INFO ("Packet lost because it's on frequency " <<
+                         frequencyMHz << " MHz and we are listening at " <<
+                         m_frequency << " MHz");
+
+            // Fire the trace source for this event.
+            if (m_device)
+              {
+                m_wrongFrequency (packet, m_device->GetNode ()->GetId ());
+              }
+            else
+              {
+                m_wrongFrequency (packet, 0);
+              }
+
+            canLockOnPacket = false;
+          }
+
+        // Check Spreading Factor
+        /////////////////////////
+        if (sf != m_sf)
+          {
+            NS_LOG_INFO ("Packet lost because it's using SF" << unsigned(sf) <<
+                         ", while we are listening for SF" << unsigned(m_sf));
+
+            // Fire the trace source for this event.
+            if (m_device)
+              {
+                m_wrongSf (packet, m_device->GetNode ()->GetId ());
+              }
+            else
+              {
+                m_wrongSf (packet, 0);
+              }
+
+            canLockOnPacket = false;
+          }
+
+        // Check Sensitivity
+        ////////////////////
+        if (rxPowerDbm < sensitivity)
+          {
+            NS_LOG_INFO ("Dropping packet reception of packet with sf = " <<
+                         unsigned(sf) << " because under the sensitivity of " <<
+                         sensitivity << " dBm");
+
+            // Fire the trace source for this event.
+            if (m_device)
+              {
+                m_underSensitivity (packet, m_device->GetNode ()->GetId ());
+              }
+            else
+              {
+                m_underSensitivity (packet, 0);
+              }
+
+            canLockOnPacket = false;
+          }
+
+        // Check if one of the above failed
+        ///////////////////////////////////
+        if (canLockOnPacket)
+          {
+            // Switch to RX state
+            // EndReceive will handle the switch back to STANDBY state
+            SwitchToRx ();
+
+            SwitchHelperToRx(duration);
+
+            // Schedule the end of the reception of the packet
+            NS_LOG_INFO ("Scheduling reception of a packet. End in " <<
+                         duration.GetSeconds () << " seconds");
+
+            Simulator::Schedule (duration, &LoraPhy::EndReceive, this, packet,
+                                 event);
+
+            // Fire the beginning of reception trace source
+            m_phyRxBeginTrace (packet);
+          }
+      }
+    }
+}
+
+void
+EndDeviceLoraPhy::EndReceive (Ptr<Packet> packet,
+                              Ptr<LoraInterferenceHelper::Event> event)
+{
+  NS_LOG_FUNCTION (this << packet << event);
+
+  // Fire the trace source
+  m_phyRxEndTrace (packet);
+
+  // Call the LoraInterferenceHelper to determine whether there was destructive
+  // interference on this event.
+  bool packetDestroyed = m_interference.IsDestroyedByInterference (event);
+
+  // Fire the trace source if packet was destroyed
+  if (packetDestroyed)
+    {
+      NS_LOG_INFO ("Packet destroyed by interference");
+
+      if (m_device)
+        {
+          m_interferedPacket (packet, m_device->GetNode ()->GetId ());
+        }
+      else
+        {
+          m_interferedPacket (packet, 0);
+        }
+
+    }
+  else
+    {
+      NS_LOG_INFO ("Packet received correctly");
+
+      if (m_device)
+        {
+          m_successfullyReceivedPacket (packet, m_device->GetNode ()->GetId ());
+        }
+      else
+        {
+          m_successfullyReceivedPacket (packet, 0);
+        }
+
+      // If there is one, perform the callback to inform the upper layer
+      if (!m_rxOkCallback.IsNull ())
+        {
+          m_rxOkCallback (packet);
+        }
+
+    }
+  // Automatically switch to Standby in either case
+  SwitchToStandby ();
+}
+
 bool
 EndDeviceLoraPhy::IsTransmitting (void)
 {
@@ -115,17 +362,11 @@ EndDeviceLoraPhy::SetFrequency (double frequencyMHz)
 }
 
 void
-EndDeviceLoraPhy::SwitchToIdle (void)
+EndDeviceLoraPhy::SwitchToStandby (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  m_state = IDLE;
-
-  // Notify listeners of the state change
-  for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
-    {
-      (*i)->NotifyIdle ();
-    }
+  m_state = STANDBY;
 }
 
 void
@@ -133,31 +374,19 @@ EndDeviceLoraPhy::SwitchToRx (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  NS_ASSERT (m_state == IDLE);
+  NS_ASSERT (m_state == STANDBY);
 
   m_state = RX;
-
-  // Notify listeners of the state change
-  for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
-    {
-      (*i)->NotifyRxStart ();
-    }
 }
 
 void
-EndDeviceLoraPhy::SwitchToTx (double txPowerDbm)
+EndDeviceLoraPhy::SwitchToTx (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
   NS_ASSERT (m_state != RX);
 
   m_state = TX;
-
-  // Notify listeners of the state change
-  for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
-    {
-      (*i)->NotifyTxStart (txPowerDbm);
-    }
 }
 
 void
@@ -165,15 +394,9 @@ EndDeviceLoraPhy::SwitchToSleep (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
 
-  NS_ASSERT (m_state == IDLE);
+  NS_ASSERT (m_state == STANDBY);
 
   m_state = SLEEP;
-
-  // Notify listeners of the state change
-  for (Listeners::const_iterator i = m_listeners.begin (); i != m_listeners.end (); i++)
-    {
-      (*i)->NotifySleep ();
-    }
 }
 
 EndDeviceLoraPhy::State
@@ -185,20 +408,38 @@ EndDeviceLoraPhy::GetState (void)
 }
 
 void
-EndDeviceLoraPhy::RegisterListener (EndDeviceLoraPhyListener *listener)
+EndDeviceLoraPhy::SwitchHelperToTx(Time txDuration, double txPowerDbm)
 {
-  m_listeners.push_back (listener);
+  LoraPhy::GetStateHelper()->SwitchToTx(txDuration, txPowerDbm);
 }
 
 void
-EndDeviceLoraPhy::UnregisterListener (EndDeviceLoraPhyListener *listener)
+EndDeviceLoraPhy::SwitchHelperToRx(Time rxDuration)
 {
-  ListenersI i = find (m_listeners.begin (), m_listeners.end (), listener);
-  if (i != m_listeners.end ())
-    {
-      m_listeners.erase (i);
-    }
+  LoraPhy::GetStateHelper()->SwitchToRx(rxDuration);
 }
 
+void
+EndDeviceLoraPhy::SwitchHelperFromRxEndOk(Ptr<Packet> packet)
+{
+  LoraPhy::GetStateHelper()->SwitchFromRxEndOk(packet);
+}
+
+void
+EndDeviceLoraPhy::SwitchHelperFromRxEndError(Ptr<Packet> packet)
+{
+  LoraPhy::GetStateHelper()->SwitchFromRxEndError(packet);
+}
+
+void
+EndDeviceLoraPhy::SwitchHelperToSleep(void)
+{
+  LoraPhy::GetStateHelper()->SwitchToSleep();
+}
+
+void
+EndDeviceLoraPhy::SwitchHelperFromSleep(Time duration)
+{
+  LoraPhy::GetStateHelper()->SwitchFromSleep(duration);
 }
 }

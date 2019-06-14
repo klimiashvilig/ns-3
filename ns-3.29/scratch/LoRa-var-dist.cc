@@ -30,15 +30,14 @@
 
 #include "ns3/basic-energy-source-helper.h"
 #include "ns3/energy-module.h"
-#include "ns3/lora-radio-energy-model-helper.h"
+#include "ns3/lora-energy-model-helper.h"
 
 using namespace ns3;
-using namespace lorawan;
 
 int nEndDevices = 1;
 int nGatways = 1;
 static const int defaultDistance = 200;
-static int fileSize = 232;
+static int fileSize = 200;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
@@ -173,8 +172,8 @@ int main (int argc, char *argv[])
     EnergySourceContainer endDeviceSources = basicSourceHelper.Install (endDevices);
     EnergySourceContainer gatewaySources = basicSourceHelper.Install (gateways);
     /* device energy model */
-    LoraRadioEnergyModelHelper loraEnergyHelper;
-    // configure radio energy model
+    LoraEnergyModelHelper loraEnergyHelper;
+    // configure energy model
     // install device model
     endDeviceModels = loraEnergyHelper.Install (endDevicesContainer, endDeviceSources);
     gatewayModels = loraEnergyHelper.Install (gatewayContainer, gatewaySources);

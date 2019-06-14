@@ -22,19 +22,8 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("GatewayStatus");
-
-TypeId
-GatewayStatus::GetTypeId (void)
-{
-  static TypeId tid = TypeId ("ns3::GatewayStatus")
-    .AddConstructor<GatewayStatus> ()
-    .SetGroupName ("lorawan");
-  return tid;
-}
-
 
 GatewayStatus::GatewayStatus ()
 {
@@ -127,6 +116,5 @@ void
 GatewayStatus::SetNextTransmissionTime (Time nextTransmissionTime)
 {
   m_nextTransmissionTime = nextTransmissionTime;
-}
 }
 }

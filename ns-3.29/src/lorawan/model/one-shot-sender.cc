@@ -27,7 +27,6 @@
 #include "ns3/lora-net-device.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("OneShotSender");
 
@@ -48,8 +47,8 @@ OneShotSender::OneShotSender ()
   NS_LOG_FUNCTION_NOARGS ();
 }
 
-OneShotSender::OneShotSender (Time sendTime)
-  : m_sendTime (sendTime)
+OneShotSender::OneShotSender (Time sendTime) :
+  m_sendTime (sendTime)
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -73,8 +72,11 @@ OneShotSender::SendPacket (void)
   NS_LOG_FUNCTION (this);
 
   // Create and send a new packet
-  Ptr<Packet> packet = Create<Packet> (10);
+  Ptr<Packet> packet = Create<Packet>(10);
+  m_mac->GetObject<EndDeviceLoraMac> ()->SetMType
+    (LoraMacHeader::CONFIRMED_DATA_UP);
   m_mac->Send (packet);
+  // add schedule
 }
 
 void
@@ -103,6 +105,5 @@ OneShotSender::StopApplication (void)
 {
   NS_LOG_FUNCTION_NOARGS ();
   Simulator::Cancel (m_sendEvent);
-}
 }
 }

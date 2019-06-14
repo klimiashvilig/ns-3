@@ -22,7 +22,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraDeviceAddressGenerator");
 
@@ -73,6 +72,5 @@ LoraDeviceAddressGenerator::GetNextAddress (void)
   NS_LOG_FUNCTION_NOARGS ();
 
   return LoraDeviceAddress (m_currentNwkId.Get (), m_currentNwkAddr.Get () + 1);
-}
 }
 }

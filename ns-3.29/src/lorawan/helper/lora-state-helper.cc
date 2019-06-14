@@ -15,7 +15,6 @@
 NS_LOG_COMPONENT_DEFINE ("LoraStateHelper");
 
 namespace ns3 {
-namespace lorawan {
     
     TypeId
     LoraStateHelper::GetTypeId (void)
@@ -120,8 +119,8 @@ namespace lorawan {
     LoraStateHelper::SwitchToRx (Time rxDuration)
     {
         NS_LOG_FUNCTION (this << rxDuration);
-        NS_ASSERT(!m_rxing);
-        NS_ASSERT (IsStateIdle ());
+        //NS_ASSERT(!m_rxing);
+        //NS_ASSERT (IsStateIdle ());
         Time now = Simulator::Now ();
         if (GetState() == LoraPhy::SLEEP)
             NS_FATAL_ERROR ("Invalid LoraPhy state.");
@@ -269,8 +268,8 @@ namespace lorawan {
     LoraStateHelper::DoSwitchFromRx (void)
     {
       NS_LOG_FUNCTION (this);
-      NS_ASSERT (IsStateRx ());
-      NS_ASSERT (m_rxing);
+      //NS_ASSERT (IsStateRx ());
+      //NS_ASSERT (m_rxing);
 
       Time now = Simulator::Now ();
       m_stateLogger (m_startRx, now - m_startRx, LoraPhy::RX);
@@ -281,5 +280,5 @@ namespace lorawan {
       NS_ASSERT (IsStateIdle ());
     }
     
-}  
+    
 } // namespace ns3

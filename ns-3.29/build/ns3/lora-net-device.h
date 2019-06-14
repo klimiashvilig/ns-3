@@ -27,7 +27,6 @@
 #include "ns3/lora-mac.h"
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraChannel;
 class LoraPhy;
@@ -86,12 +85,6 @@ public:
   void Send (Ptr<Packet> packet);
 
   /**
-   * This function is implemented to achieve compliance with the NetDevice
-   * interface. Note that the dest and protocolNumber args are ignored.
-   */
-  bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-
-  /**
    * Callback the Mac layer calls whenever a packet arrives and needs to be
    * forwarded up the stack.
    *
@@ -121,12 +114,14 @@ public:
   virtual Address GetMulticast (Ipv6Address addr) const;
   virtual bool IsBridge (void) const;
   virtual bool IsPointToPoint (void) const;
+  virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
   virtual bool SendFrom (Ptr<Packet> packet, const Address& source, const Address& dest, uint16_t protocolNumber);
   virtual bool NeedsArp (void) const;
   virtual void SetPromiscReceiveCallback (PromiscReceiveCallback cb);
   virtual bool SupportsSendFrom (void) const;
 
 protected:
+
   /**
    * Receive a packet from the lower layer and pass the
    * packet up the stack.
@@ -138,6 +133,7 @@ protected:
   void ForwardUp (Ptr<Packet> packet, Mac48Address from, Mac48Address to);
 
 private:
+
   /**
    * Return the LoraChannel this device is connected to.
    */
@@ -163,5 +159,4 @@ private:
 
 } //namespace ns3
 
-}
 #endif /* LORA_NET_DEVICE_H */

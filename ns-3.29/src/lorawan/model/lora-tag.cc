@@ -23,7 +23,6 @@
 #include "ns3/uinteger.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_OBJECT_ENSURE_REGISTERED (LoraTag);
 
@@ -62,7 +61,7 @@ LoraTag::GetSerializedSize (void) const
 {
   // Each datum about a SF is 1 byte + receivePower (the size of a double) +
   // frequency (the size of a double)
-  return 3 + 2 * sizeof(double);
+  return 3 + 2*sizeof(double);
 }
 
 void
@@ -89,7 +88,7 @@ void
 LoraTag::Print (std::ostream &os) const
 {
   os << m_sf << " " << m_destroyedBy << " " << m_receivePower << " " <<
-    m_dataRate;
+  m_dataRate;
 }
 
 uint8_t
@@ -152,5 +151,4 @@ LoraTag::SetDataRate (uint8_t dataRate)
   m_dataRate = dataRate;
 }
 
-}
 } // namespace ns3

@@ -23,7 +23,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LogicalLoraChannelHelper");
 
@@ -45,8 +44,7 @@ LogicalLoraChannelHelper::LogicalLoraChannelHelper () :
   NS_LOG_FUNCTION (this);
 }
 
-LogicalLoraChannelHelper::~LogicalLoraChannelHelper ()
-{
+LogicalLoraChannelHelper::~LogicalLoraChannelHelper () {
   NS_LOG_FUNCTION (this);
 }
 
@@ -64,31 +62,6 @@ LogicalLoraChannelHelper::GetChannelList (void)
   return vector;
 }
 
-
-std::vector<Ptr <LogicalLoraChannel> >
-LogicalLoraChannelHelper::GetEnabledChannelList (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  // Make a copy of the channel vector
-  std::vector<Ptr<LogicalLoraChannel> > vector;
-  vector.reserve (m_channelList.size ());
-  std::copy (m_channelList.begin (), m_channelList.end (), std::back_inserter
-               (vector));     // Working on a copy
-
-  std::vector<Ptr <LogicalLoraChannel> > channels;
-  std::vector<Ptr <LogicalLoraChannel> >::iterator it;
-  for (it = vector.begin (); it != vector.end (); it++)
-    {
-      if ((*it)->IsEnabledForUplink ())
-        {
-          channels.push_back (*it);
-        }
-    }
-
-  return channels;
-}
-
 Ptr<SubBand>
 LogicalLoraChannelHelper::GetSubBandFromChannel (Ptr<LogicalLoraChannel>
                                                  channel)
@@ -101,8 +74,7 @@ LogicalLoraChannelHelper::GetSubBandFromFrequency (double frequency)
 {
   // Get the SubBand this frequency belongs to
   std::list< Ptr< SubBand > >::iterator it;
-  for (it = m_subBandList.begin (); it != m_subBandList.end (); it++)
-    {
+  for (it = m_subBandList.begin (); it != m_subBandList.end (); it++) {
       if ((*it)->BelongsToSubBand (frequency))
         {
           return *it;
@@ -111,7 +83,7 @@ LogicalLoraChannelHelper::GetSubBandFromFrequency (double frequency)
 
   NS_LOG_ERROR ("Warning: frequency is outside any known SubBand.");
 
-  return 0;     // If no SubBand is found, return 0
+  return 0; // If no SubBand is found, return 0
 }
 
 void
@@ -232,11 +204,11 @@ LogicalLoraChannelHelper::AddEvent (Time duration,
 
   // Computation of necessary waiting time on this sub-band
   subBand->SetNextTransmissionTime (Simulator::Now () + Seconds
-                                      (timeOnAir / dutyCycle - timeOnAir));
+                                      (timeOnAir/dutyCycle - timeOnAir));
 
   // Computation of necessary aggregate waiting time
   m_nextAggregatedTransmissionTime = Simulator::Now () + Seconds
-      (timeOnAir / m_aggregatedDutyCycle - timeOnAir);
+      (timeOnAir/m_aggregatedDutyCycle - timeOnAir);
 
   NS_LOG_DEBUG ("Time on air: " << timeOnAir);
   NS_LOG_DEBUG ("m_aggregatedDutyCycle: " << m_aggregatedDutyCycle);
@@ -274,6 +246,5 @@ LogicalLoraChannelHelper::DisableChannel (int index)
   NS_LOG_FUNCTION (this << index);
 
   m_channelList.at (index)->DisableForUplink ();
-}
 }
 }

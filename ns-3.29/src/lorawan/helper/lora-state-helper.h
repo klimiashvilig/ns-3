@@ -17,7 +17,6 @@
 
 
 namespace ns3 {
-namespace lorawan {
     //class LoraPhy;
 
     class LoraStateHelper : public Object
@@ -106,7 +105,7 @@ namespace lorawan {
     };
     
 
-}
+    
 } // namespace ns3
 
 

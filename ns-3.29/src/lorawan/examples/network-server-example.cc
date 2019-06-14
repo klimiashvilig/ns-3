@@ -1,7 +1,6 @@
 /*
  * This example creates a simple network in which all LoRaWAN components are
  * simulated: End Devices, some Gateways and a Network Server.
- * Two end devices are already configured to send unconfirmed and confirmed messages respectively.
  */
 
 #include "ns3/point-to-point-module.h"
@@ -24,7 +23,6 @@
 #include "ns3/one-shot-sender-helper.h"
 
 using namespace ns3;
-using namespace lorawan;
 
 NS_LOG_COMPONENT_DEFINE ("NetworkServerExample");
 
@@ -41,7 +39,7 @@ int main (int argc, char *argv[])
   //////////
 
   LogComponentEnable ("NetworkServerExample", LOG_LEVEL_ALL);
-  LogComponentEnable ("NetworkServer", LOG_LEVEL_ALL);
+  LogComponentEnable ("SimpleNetworkServer", LOG_LEVEL_ALL);
   LogComponentEnable ("GatewayLoraMac", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraFrameHeader", LOG_LEVEL_ALL);
   // LogComponentEnable("LoraMacHeader", LOG_LEVEL_ALL);
@@ -52,12 +50,12 @@ int main (int argc, char *argv[])
   // LogComponentEnable("EndDeviceLoraPhy", LOG_LEVEL_ALL);
   // LogComponentEnable("LogicalLoraChannelHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("EndDeviceLoraMac", LOG_LEVEL_ALL);
-  // LogComponentEnable ("OneShotSender", LOG_LEVEL_ALL);
+  LogComponentEnable ("OneShotSender", LOG_LEVEL_ALL);
   // LogComponentEnable("PointToPointNetDevice", LOG_LEVEL_ALL);
-  // LogComponentEnable ("Forwarder", LOG_LEVEL_ALL);
-  // LogComponentEnable ("OneShotSender", LOG_LEVEL_ALL);
-  // LogComponentEnable ("DeviceStatus", LOG_LEVEL_ALL);
-  // LogComponentEnable ("GatewayStatus", LOG_LEVEL_ALL);
+  LogComponentEnable ("Forwarder", LOG_LEVEL_ALL);
+  LogComponentEnable ("OneShotSender", LOG_LEVEL_ALL);
+  LogComponentEnable ("DeviceStatus", LOG_LEVEL_ALL);
+  LogComponentEnable ("GatewayStatus", LOG_LEVEL_ALL);
   LogComponentEnableAll (LOG_PREFIX_FUNC);
   LogComponentEnableAll (LOG_PREFIX_NODE);
   LogComponentEnableAll (LOG_PREFIX_TIME);
@@ -67,7 +65,7 @@ int main (int argc, char *argv[])
 
   Ptr<LogDistancePropagationLossModel> loss = CreateObject<LogDistancePropagationLossModel> ();
   loss->SetPathLossExponent (3.76);
-  loss->SetReference (1, 7.7);
+  loss->SetReference (1, 8.1);
 
   Ptr<PropagationDelayModel> delay = CreateObject<ConstantSpeedPropagationDelayModel> ();
 
@@ -79,9 +77,13 @@ int main (int argc, char *argv[])
   // End Device mobility
   MobilityHelper mobilityEd, mobilityGw;
   Ptr<ListPositionAllocator> positionAllocEd = CreateObject<ListPositionAllocator> ();
-  positionAllocEd->Add (Vector (6000.0, 0.0, 0.0));
-  positionAllocEd->Add (Vector (0.0, 100.0, 0.0));
+  positionAllocEd->Add (Vector (10.0, 0.0, 0.0));
+  positionAllocEd->Add (Vector (2000.0, 0.0, 0.0));
   mobilityEd.SetPositionAllocator (positionAllocEd);
+  // mobilityEd.SetPositionAllocator ("ns3::UniformDiscPositionAllocator",
+  //                                "rho", DoubleValue (7500),
+  //                                "X", DoubleValue (0.0),
+  //                                "Y", DoubleValue (0.0));
   mobilityEd.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 
   // Gateway mobility
@@ -106,7 +108,7 @@ int main (int argc, char *argv[])
   /////////////
 
   NodeContainer endDevices;
-  endDevices.Create (2);
+  endDevices.Create (1);
   mobilityEd.Install (endDevices);
 
   // Create a LoraDeviceAddressGenerator
@@ -121,18 +123,12 @@ int main (int argc, char *argv[])
   macHelper.SetRegion (LoraMacHelper::EU);
   helper.Install (phyHelper, macHelper, endDevices);
 
-  // Set message type (Default is unconfirmed)
-  Ptr<LoraMac> edMac1 = endDevices.Get (1)->GetDevice (0)->GetObject<LoraNetDevice> ()->GetMac ();
-  Ptr<EndDeviceLoraMac> edLoraMac1 = edMac1->GetObject<EndDeviceLoraMac> ();
-  edLoraMac1->SetMType (LoraMacHeader::CONFIRMED_DATA_UP);
-
-
   // Install applications in EDs
   OneShotSenderHelper oneShotHelper = OneShotSenderHelper ();
   oneShotHelper.SetSendTime (Seconds (4));
   oneShotHelper.Install (endDevices.Get (0));
-  oneShotHelper.SetSendTime (Seconds (10));
-  oneShotHelper.Install (endDevices.Get (1));
+  // oneShotHelper.SetSendTime (Seconds (10));
+  // oneShotHelper.Install (endDevices.Get (1));
   // oneShotHelper.SetSendTime (Seconds (8));
   // oneShotHelper.Install(endDevices.Get (1));
   // oneShotHelper.SetSendTime (Seconds (12));
@@ -161,7 +157,7 @@ int main (int argc, char *argv[])
   NodeContainer networkServers;
   networkServers.Create (1);
 
-  // Install the NetworkServer application on the network server
+  // Install the SimpleNetworkServer application on the network server
   NetworkServerHelper networkServerHelper;
   networkServerHelper.SetGateways (gateways);
   networkServerHelper.SetEndDevices (endDevices);
@@ -172,7 +168,7 @@ int main (int argc, char *argv[])
   forwarderHelper.Install (gateways);
 
   // Start simulation
-  Simulator::Stop (Seconds (800));
+  Simulator::Stop (Seconds (100));
   Simulator::Run ();
   Simulator::Destroy ();
 

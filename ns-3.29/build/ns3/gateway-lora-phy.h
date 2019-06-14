@@ -31,7 +31,6 @@
 #include <list>
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraChannel;
 
@@ -48,19 +47,20 @@ class LoraChannel;
 class GatewayLoraPhy : public LoraPhy
 {
 public:
+
   static TypeId GetTypeId (void);
 
-  GatewayLoraPhy ();
-  virtual ~GatewayLoraPhy ();
+  GatewayLoraPhy();
+  virtual ~GatewayLoraPhy();
 
   virtual void StartReceive (Ptr<Packet> packet, double rxPowerDbm, uint8_t sf,
-                             Time duration, double frequencyMHz) = 0;
+                             Time duration, double frequencyMHz);
 
   virtual void EndReceive (Ptr<Packet> packet,
-                           Ptr<LoraInterferenceHelper::Event> event) = 0;
+                           Ptr<LoraInterferenceHelper::Event> event);
 
   virtual void Send (Ptr<Packet> packet, LoraTxParameters txParams,
-                     double frequencyMHz, double txPowerDbm) = 0;
+                     double frequencyMHz, double txPowerDbm);
 
   virtual void TxFinished (Ptr<Packet> packet);
 
@@ -88,7 +88,17 @@ public:
    */
   static const double sensitivity[6];
 
-protected:
+  int getDuration(void);
+
+private:
+  
+  //Added
+  void SwitchHelperToTx(Time txDuration, double txPowerDbm);
+  void SwitchHelperToRx(Time rxDuration);
+  void SwitchHelperFromRxEndOk(Ptr<Packet> packet);
+  void SwitchHelperFromRxEndError(Ptr<Packet> packet);
+  void SwitchHelperToSleep(void);
+  void SwitchHelperFromSleep(Time duration);
   /**
    * This class represents a configurable reception path.
    *
@@ -100,6 +110,7 @@ protected:
   {
 
 public:
+
     /**
      * Constructor.
      *
@@ -107,7 +118,7 @@ public:
      */
     ReceptionPath (double frequencyMHz);
 
-    ~ReceptionPath ();
+    ~ReceptionPath();
 
     /**
      * Getter for the operating frequency.
@@ -161,19 +172,8 @@ public:
      */
     Ptr<LoraInterferenceHelper::Event> GetEvent (void);
 
-    /**
-     * Get the EventId of the EndReceive call associated to this ReceptionPath's
-     * packet.
-     */
-    EventId GetEndReceive (void);
-
-    /**
-     * Set the EventId of the EndReceive call associated to this ReceptionPath's
-     * packet.
-     */
-    void SetEndReceive (EventId endReceiveEventId);
-
 private:
+
     /**
      * The frequency this path is currently listening on, in MHz.
      */
@@ -188,12 +188,6 @@ private:
      * The event this reception path is currently locked on.
      */
     Ptr< LoraInterferenceHelper::Event > m_event;
-
-    /**
-     * The EventId associated of the call to EndReceive that is scheduled to
-     * happen when the packet this ReceivePath is locked on finishes reception.
-     */
-    EventId m_endReceiveEventId;
   };
 
   /**
@@ -215,18 +209,11 @@ private:
    */
   TracedCallback<Ptr<const Packet>, uint32_t> m_noMoreDemodulators;
 
-  /**
-   * Trace source that is fired when a packet cannot be received because
-   * the Gateway is in transmission state.
-   *
-   * \see class CallBackTraceSource
-   */
-  TracedCallback<Ptr<const Packet>, uint32_t> m_noReceptionBecauseTransmitting;
-
   bool m_isTransmitting; //!< Flag indicating whether a transmission is going on
+
+  int dur;
 };
 
 } /* namespace ns3 */
 
-}
 #endif /* GATEWAY_LORA_PHY_H */

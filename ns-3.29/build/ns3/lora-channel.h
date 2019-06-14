@@ -36,29 +36,28 @@
 #include "ns3/nstime.h"
 
 namespace ns3 {
-class NetDevice;
-class PropagationLossModel;
-class PropagationDelayModel;
-namespace lorawan {
 
+class NetDevice;
 class LoraPhy;
 struct LoraTxParameters;
+class PropagationLossModel;
+class PropagationDelayModel;
 
 /**
- * A struct that holds meaningful parameters for transmission on a
- * LoraChannel.
- */
+  * A struct that holds meaningful parameters for transmission on a
+  * LoraChannel.
+  */
 struct LoraChannelParameters
 {
-  double rxPowerDbm;     //!< The reception power.
-  uint8_t sf;     //!< The Spreading Factor of this transmission.
-  Time duration;     //!< The duration of the transmission.
-  double frequencyMHz;     //!< The frequency [MHz] of this transmission.
+  double rxPowerDbm; //!< The reception power.
+  uint8_t sf; //!< The Spreading Factor of this transmission.
+  Time duration; //!< The duration of the transmission.
+  double frequencyMHz; //!< The frequency [MHz] of this transmission.
 };
 
 /**
- * Allow logging of LoraChannelParameters like with any other data type.
- */
+  * Allow logging of LoraChannelParameters like with any other data type.
+  */
 std::ostream &operator << (std::ostream &os, const LoraChannelParameters &params);
 
 /**
@@ -196,5 +195,4 @@ private:
 
 } /* namespace ns3 */
 
-}
 #endif /* LORA_CHANNEL_H */

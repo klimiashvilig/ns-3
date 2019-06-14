@@ -25,7 +25,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("GatewayLoraMac");
 
@@ -103,6 +102,8 @@ void
 GatewayLoraMac::Receive (Ptr<Packet const> packet)
 {
   NS_LOG_FUNCTION (this << packet);
+  
+  //NS_LOG_UNCOND("Waiting time " << GetWaitingTime(frequencyMHz).GetSeconds());
 
   // Make a copy of the packet to work on
   Ptr<Packet> packetCopy = packet->Copy ();
@@ -114,24 +115,12 @@ GatewayLoraMac::Receive (Ptr<Packet const> packet)
   if (macHdr.IsUplink ())
     {
       m_device->GetObject<LoraNetDevice> ()->Receive (packetCopy);
-
-      NS_LOG_DEBUG ("Received packet: " << packet);
-
-      if (macHdr.IsConfirmed ())    // Only fire the callback if it's confirmed
-        {
-          m_receivedPacket (packet);
-        }
+      m_receivedPacket (packet);
     }
   else
     {
       NS_LOG_DEBUG ("Not forwarding downlink message to NetDevice");
     }
-}
-
-void
-GatewayLoraMac::FailedReception (Ptr<Packet const> packet)
-{
-  NS_LOG_FUNCTION (this << packet);
 }
 
 void
@@ -147,6 +136,5 @@ GatewayLoraMac::GetWaitingTime (double frequency)
 
   return m_channelHelper.GetWaitingTime (CreateObject<LogicalLoraChannel>
                                            (frequency));
-}
 }
 }

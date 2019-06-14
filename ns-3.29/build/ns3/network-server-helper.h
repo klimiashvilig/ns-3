@@ -28,12 +28,10 @@
 #include "ns3/node-container.h"
 #include "ns3/application-container.h"
 #include "ns3/point-to-point-helper.h"
-#include "ns3/network-server.h"
 #include <stdint.h>
 #include <string>
 
 namespace ns3 {
-namespace lorawan {
 
 /**
  * This class can install Network Server applications on multiple nodes at once.
@@ -62,7 +60,6 @@ public:
   void SetEndDevices (NodeContainer endDevices);
 
 private:
-  void InstallComponents (Ptr<NetworkServer> netServer);
   Ptr<Application> InstallPriv (Ptr<Node> node);
 
   ObjectFactory m_factory;
@@ -76,5 +73,4 @@ private:
 
 } // namespace ns3
 
-}
 #endif /* NETWORK_SERVER_HELPER_H */

@@ -27,11 +27,10 @@
 #include "ns3/attribute.h"
 
 namespace ns3 {
-namespace lorawan {
 
-class OneShotSender : public Application
-{
+class OneShotSender : public Application {
 public:
+
   OneShotSender ();
   OneShotSender (Time sendTime);
   ~OneShotSender ();
@@ -59,6 +58,7 @@ public:
   void StopApplication (void);
 
 private:
+
   /**
    * The time at which to send the packet.
    */
@@ -77,5 +77,4 @@ private:
 
 } //namespace ns3
 
-}
 #endif /* ONE_SHOT_APPLICATION */

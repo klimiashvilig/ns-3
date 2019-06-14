@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author: Davide Magrin <magrinda@dei.unipd.it>
- *         Martina Capuzzo <capuzzom@dei.unipd.it>
  */
 
 #ifndef END_DEVICE_LORA_MAC_H
@@ -30,22 +29,22 @@
 #include "ns3/traced-value.h"
 
 namespace ns3 {
-namespace lorawan {
 
 /**
- * Class representing the MAC layer of a LoRaWAN device.
- */
+  * Class representing the MAC layer of a LoRaWAN device.
+  */
 class EndDeviceLoraMac : public LoraMac
 {
 public:
+
   static TypeId GetTypeId (void);
 
-  EndDeviceLoraMac ();
-  virtual ~EndDeviceLoraMac ();
+  EndDeviceLoraMac();
+  virtual ~EndDeviceLoraMac();
 
-  /////////////////////
-  // Sending methods //
-  /////////////////////
+  /////////////////////////////////
+  // Sending / receiving methods //
+  /////////////////////////////////
 
   /**
    * Send a packet.
@@ -57,32 +56,6 @@ public:
   virtual void Send (Ptr<Packet> packet);
 
   /**
-   * Checking if we are performing the transmission of a new packet or a retransmission, and call SendToPhy function.
-   *
-   * \param packet the packet to send
-   */
-  virtual void DoSend (Ptr<Packet> packet);
-
-  /**
-  * Add headers and send a packet with the sending function of the physical layer.
-  *
-  * \param packet the packet to send
-  */
-  virtual void SendToPhy (Ptr<Packet> packet);
-
-  /**
-   * Postpone transmission to the specified time and delete previously scheduled transmissions if present.
-   *
-   * \param nextTxDelay Delay at which the transmission will be performed.
-   */
-  virtual void postponeTransmission (Time nextTxDelay, Ptr<Packet>);
-
-
-  ///////////////////////
-  // Receiving methods //
-  ///////////////////////
-
-  /**
    * Receive a packet.
    *
    * This method is typically registered as a callback in the underlying PHY
@@ -91,8 +64,6 @@ public:
    * \param packet the received packet.
    */
   virtual void Receive (Ptr<Packet const> packet);
-
-  virtual void FailedReception (Ptr<Packet const> packet);
 
   /**
    * Perform the actions that are required after a packet send.
@@ -124,35 +95,6 @@ public:
   /////////////////////////
   // Getters and Setters //
   /////////////////////////
-
-  /**
-  * Reset retransmission parameters contained in the structure LoraRetxParams
-  */
-  virtual void resetRetransmissionParameters ();
-
-  /**
-   * Enable data rate adaptation in the retransmitting procedure.
-   *
-   * \param adapt If the data rate adaptation is enabled or not.
-   */
-  void SetDataRateAdaptation (bool adapt);
-
-  /**
-   * Get if data rate adaptation is enabled or not.
-   */
-  bool GetDataRateAdaptation (void);
-
-  /**
-   * Set the maximum number of transmissions allowed.
-   *
-   * \param maxNumbTx The maximum number of transmissions allowed
-   */
-  void SetMaxNumberOfTransmissions (uint8_t maxNumbTx);
-
-  /**
-   * Set the maximum number of transmissions allowed.
-   */
-  uint8_t GetMaxNumberOfTransmissions (void);
 
   /**
    * Set the data rate this end device will use when transmitting. For End
@@ -228,14 +170,14 @@ public:
    *
    * \param rx1DrOffset The value to set for the offset.
    */
-  // void SetRx1DrOffset (uint8_t rx1DrOffset);
+  void SetRx1DrOffset (uint8_t rx1DrOffset);
 
   /**
    * Get the value of the RX1DROffset parameter.
    *
    * \return The value of the RX1DROffset parameter.
    */
-  // uint8_t GetRx1DrOffset (void);
+  uint8_t GetRx1DrOffset (void);
 
   /**
    * Get the aggregated duty cycle.
@@ -267,11 +209,6 @@ public:
    * Set the message type to send when the Send method is called.
    */
   void SetMType (LoraMacHeader::MType mType);
-
-  /**
- * Get the message type to send when the Send method is called.
- */
-  LoraMacHeader::MType GetMType (void);
 
   /**
    * Parse and take action on the commands contained on this FrameHeader.
@@ -365,49 +302,17 @@ public:
   void AddSubBand (double startFrequency, double endFrequency, double dutyCycle,
                    double maxTxPowerDbm);
 
-  /**
-   * Add a MAC command to the list of those that will be sent out in the next
-   * packet.
-   */
-  void AddMacCommand (Ptr<MacCommand> macCommand);
-
-  uint8_t GetTransmissionPower (void);
-
-  /**
-    * Find the minimum waiting time before the next possible transmission.
-    */
-  Time GetNextTransmissionDelay (void);
+  Time GetWaitingTimeForTx(void);
 
 private:
-  /**
-   * Structure representing the parameters that will be used in the
-   * retransmission procedure.
-   */
-  struct LoraRetxParameters
-  {
-    Time firstAttempt;
-    Ptr<Packet> packet = 0;
-    bool waitingAck = false;
-    uint8_t retxLeft;
-  };
-
-  /**
-   * Enable Data Rate adaptation during the retransmission procedure.
-   */
-  bool m_enableDRAdapt;
-
-  /**
-   * Maximum number of transmission allowed.
-   */
-  uint8_t m_maxNumbTx;
 
   /**
    * Randomly shuffle a Ptr<LogicalLoraChannel> vector.
    *
    * Used to pick a random channel on which to send the packet.
    */
-  std::vector<Ptr<LogicalLoraChannel> > Shuffle (std::vector<Ptr<LogicalLoraChannel> > vector);
-
+  std::vector<Ptr<LogicalLoraChannel> > Shuffle
+    (std::vector<Ptr<LogicalLoraChannel> > vector);
 
   /**
    * Find a suitable channel for transmission. The channel is chosen among the
@@ -421,14 +326,6 @@ private:
    * the channel list.
    */
   Ptr<UniformRandomVariable> m_uniformRV;
-
-
-/**
-   * The total number of transmissions required.
-   */
-/*
-TracedValue<uint8_t> m_requiredTx;
-*/
 
   /**
    * The DataRate this device is using to transmit.
@@ -463,30 +360,16 @@ TracedValue<uint8_t> m_requiredTx;
   Time m_receiveDelay2;
 
   /**
-   * The duration of a receive window in number of symbols. This should be 
-   * converted to time based or the reception parameter used.
-   * 
-   * The downlink preamble transmitted by the gateways contains 8 symbols. 
-   * The receiver requires 5 symbols to detect the preamble and synchronize. 
-   * Therefore there must be a 5 symbols overlap between the receive window 
-   * and the transmitted preamble. 
-   * (Ref: Recommended SX1272/76 Settings for EU868 LoRaWAN Network Operation )
+   * The duration of a receive window.
    */
-  uint8_t m_receiveWindowDurationInSymbols;
+  Time m_receiveWindowDuration;
 
   /**
-   * The event of the closing the first receive window.
+   * The event of the closing of a receive window.
    *
    * This Event will be canceled if there's a successful reception of a packet.
    */
-  EventId m_closeFirstWindow;
-
-  /**
-   * The event of the closing the second receive window.
-   *
-   * This Event will be canceled if there's a successful reception of a packet.
-   */
-  EventId m_closeSecondWindow;
+  EventId m_closeWindow;
 
   /**
    * The event of the second receive window opening.
@@ -496,20 +379,6 @@ TracedValue<uint8_t> m_requiredTx;
    */
   EventId m_secondReceiveWindow;
 
-  /**
-   * The event of retransmitting a packet in a consecutive moment if an ACK is not received.
-   *
-   * This Event is used to cancel the retransmission if the ACK is found in ParseCommand function and
-   * if a newer packet is delivered from the application to be sent.
-   */
-  EventId m_nextTx;
-
-  /**
-   * The event of transmitting a packet in a consecutive moment, when the duty cycle let us transmit.
-   *
-   * This Event is used to cancel the transmission of this packet if a newer packet is delivered from the application to be sent.
-   */
-  EventId m_nextRetx;
   /**
    * The address of this device.
    */
@@ -561,29 +430,8 @@ TracedValue<uint8_t> m_requiredTx;
    * The message type to apply to packets sent with the Send method.
    */
   LoraMacHeader::MType m_mType;
-
-  /* Structure containing the retransmission parameters
-   * for this device.
-   */
-  struct LoraRetxParameters m_retxParams;
-
-  uint8_t m_currentFCnt;
-
-  /////////////////
-  //  Callbacks  //
-  /////////////////
-
-  /**
-   * The trace source fired when the transmission procedure is finished.
-   *
-   * \see class CallBackTraceSource
-   */
-  TracedCallback<uint8_t, bool, Time, Ptr<Packet> > m_requiredTxCallback;
-
 };
-
 
 } /* namespace ns3 */
 
-}
 #endif /* END_DEVICE_LORA_MAC_H */

@@ -28,24 +28,24 @@
 #include <array>
 
 namespace ns3 {
-namespace lorawan {
 
 class LoraPhy;
 
 /**
- * Class representing the LoRaWAN MAC layer.
- *
- * This class is meant to be extended differently based on whether the layer
- * belongs to an End Device or a Gateway, while holding some functionality that
- * is common to both.
- */
+  * Class representing the LoRaWAN MAC layer.
+  *
+  * This class is meant to be extended differently based on whether the layer
+  * belongs to an End Device or a Gateway, while holding some functionality that
+  * is common to both.
+  */
 class LoraMac : public Object
 {
 public:
+
   static TypeId GetTypeId (void);
 
-  LoraMac ();
-  virtual ~LoraMac ();
+  LoraMac();
+  virtual ~LoraMac();
 
   typedef std::array<std::array<uint8_t, 6>, 8> ReplyDataRateMatrix;
 
@@ -76,14 +76,6 @@ public:
    * \param packet the received packet
    */
   virtual void Receive (Ptr<Packet const> packet) = 0;
-
-  /**
-   * Function called by lower layers to inform this layer that reception of a
-   * packet we were locked on failed.
-   *
-   * \param packet the packet we failed to receive
-  */
-  virtual void FailedReception (Ptr<Packet const> packet) = 0;
 
   /**
    * Perform actions after sending a packet.
@@ -225,12 +217,6 @@ protected:
   TracedCallback<Ptr<const Packet> > m_receivedPacket;
 
   /**
-   * Trace source that is fired when a new APP layer packet arrives at the MAC
-   * layer.
-   */
-  TracedCallback<Ptr<Packet const> > m_sentNewPacket;
-
-  /**
    * The PHY instance that sits under this MAC layer.
    */
   Ptr<LoraPhy> m_phy;
@@ -280,5 +266,4 @@ protected:
 
 } /* namespace ns3 */
 
-}
 #endif /* LORA_MAC_H */

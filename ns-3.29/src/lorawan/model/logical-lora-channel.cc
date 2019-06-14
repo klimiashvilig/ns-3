@@ -22,7 +22,6 @@
 #include "ns3/log.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LogicalLoraChannel");
 
@@ -46,8 +45,7 @@ LogicalLoraChannel::LogicalLoraChannel () :
   NS_LOG_FUNCTION (this);
 }
 
-LogicalLoraChannel::~LogicalLoraChannel ()
-{
+LogicalLoraChannel::~LogicalLoraChannel () {
   NS_LOG_FUNCTION (this);
 }
 
@@ -135,6 +133,5 @@ operator!= (const Ptr<LogicalLoraChannel>& first,
             const Ptr<LogicalLoraChannel>& second)
 {
   return !(first == second);
-}
 }
 }

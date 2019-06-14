@@ -26,13 +26,12 @@
 #include "ns3/lora-state-helper.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("LoraPhy");
 
 NS_OBJECT_ENSURE_REGISTERED (LoraPhy);
 
-LoraPhyListener::~LoraPhyListener()
+LoraPhyListener::~LoraPhyListener ()
 {
 }
 
@@ -78,15 +77,15 @@ LoraPhy::GetTypeId (void)
                      "ns3::Packet::TracedCallback")
     .AddAttribute ("State",
                    "The state of the PHY layer.",
-                   PointerValue(),
-                   MakePointerAccessor(&LoraPhy::m_state),
-                   MakePointerChecker<LoraStateHelper>());
+                   PointerValue (),
+                   MakePointerAccessor (&LoraPhy::m_state),
+                   MakePointerChecker<LoraStateHelper> ());
   return tid;
 }
 
 LoraPhy::LoraPhy ()
 {
-  m_state = CreateObject<LoraStateHelper>();
+  m_state = CreateObject<LoraStateHelper> ();
 }
 
 LoraPhy::~LoraPhy ()
@@ -126,7 +125,7 @@ LoraPhy::GetMobility (void)
     {
       return m_mobility;
     }
-  else     // Else, take it from the node
+  else // Else, take it from the node
     {
       return m_device->GetNode ()->GetObject<MobilityModel> ();
     }
@@ -152,13 +151,7 @@ void
 LoraPhy::SetReceiveOkCallback (RxOkCallback callback)
 {
   m_rxOkCallback = callback;
-  m_state->SetReceiveOkCallback(callback);
-}
-
-void
-LoraPhy::SetReceiveFailedCallback (RxFailedCallback callback)
-{
-  m_rxFailedCallback = callback;
+  m_state->SetReceiveOkCallback (callback);
 }
 
 void
@@ -185,7 +178,7 @@ LoraPhy::GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams)
   double tPreamble = (double(txParams.nPreamble) + 4.25) * tSym;
 
   // Payload size
-  uint32_t pl = packet->GetSize ();      // Size in bytes
+  uint32_t pl = packet->GetSize ();  // Size in bytes
   NS_LOG_DEBUG ("Packet of size " << pl << " bytes");
 
   // This step is needed since the formula deals with double values.
@@ -215,13 +208,13 @@ LoraPhy::GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams)
 }
 
 void
-LoraPhy::RegisterListener(LoraPhyListener *listener)
+LoraPhy::RegisterListener (LoraPhyListener *listener)
 {
-  m_state->RegisterListener(listener);
+  m_state->RegisterListener (listener);
 }
 
 Ptr<LoraStateHelper>
-LoraPhy::GetStateHelper(void)
+LoraPhy::GetStateHelper (void)
 {
   return m_state;
 }
@@ -229,15 +222,14 @@ LoraPhy::GetStateHelper(void)
 std::ostream &operator << (std::ostream &os, const LoraTxParameters &params)
 {
   os << "SF: " << unsigned(params.sf) <<
-    ", headerDisabled: " << params.headerDisabled <<
-    ", codingRate: " << unsigned(params.codingRate) <<
-    ", bandwidthHz: " << params.bandwidthHz <<
-    ", nPreamble: " << params.nPreamble <<
-    ", crcEnabled: " << params.crcEnabled <<
-    ", lowDataRateOptimizationEnabled: " << params.lowDataRateOptimizationEnabled <<
-    ")";
+  ", headerDisabled: " << params.headerDisabled <<
+  ", codingRate: " << unsigned(params.codingRate) <<
+  ", bandwidthHz: " << params.bandwidthHz <<
+  ", nPreamble: " << params.nPreamble <<
+  ", crcEnabled: " << params.crcEnabled <<
+  ", lowDataRateOptimizationEnabled: " << params.lowDataRateOptimizationEnabled <<
+  ")";
 
   return os;
-}
 }
 }

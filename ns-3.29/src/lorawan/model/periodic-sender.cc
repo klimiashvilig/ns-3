@@ -26,7 +26,6 @@
 #include "ns3/lora-net-device.h"
 
 namespace ns3 {
-namespace lorawan {
 
 NS_LOG_COMPONENT_DEFINE ("PeriodicSender");
 
@@ -43,20 +42,18 @@ PeriodicSender::GetTypeId (void)
                    TimeValue (Seconds (0)),
                    MakeTimeAccessor (&PeriodicSender::GetInterval,
                                      &PeriodicSender::SetInterval),
-                   MakeTimeChecker ());
-  // .AddAttribute ("PacketSizeRandomVariable", "The random variable that determines the shape of the packet size, in bytes",
-  //                StringValue ("ns3::UniformRandomVariable[Min=0,Max=10]"),
-  //                MakePointerAccessor (&PeriodicSender::m_pktSizeRV),
-  //                MakePointerChecker <RandomVariableStream>());
+                   MakeTimeChecker ())
+    .AddAttribute ("PacketSize", "The size of the packets this application sends, in bytes",
+                   StringValue ("ns3::ParetoRandomVariable[Bound=200,Shape=2.5]"),
+                   MakePointerAccessor (&PeriodicSender::m_pktSize),
+                   MakePointerChecker <RandomVariableStream>());
   return tid;
 }
 
-PeriodicSender::PeriodicSender ()
-  : m_interval (Seconds (10)),
+PeriodicSender::PeriodicSender () :
+  m_interval (Seconds (10)),
   m_initialDelay (Seconds (1)),
-  m_basePktSize (10),
-  m_pktSizeRV (0)
-
+  m_randomPktSize (1)
 {
   NS_LOG_FUNCTION_NOARGS ();
 }
@@ -87,36 +84,22 @@ PeriodicSender::SetInitialDelay (Time delay)
   m_initialDelay = delay;
 }
 
-
-void
-PeriodicSender::SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv)
-{
-  m_pktSizeRV = rv;
-}
-
-
-void
-PeriodicSender::SetPacketSize (uint8_t size)
-{
-  m_basePktSize = size;
-}
-
-
 void
 PeriodicSender::SendPacket (void)
 {
   NS_LOG_FUNCTION (this);
 
   // Create and send a new packet
+  int size = m_pktSize->GetInteger ();
+  NS_LOG_UNCOND(size);
   Ptr<Packet> packet;
-  if (m_pktSizeRV)
+  if (m_randomPktSize == true)
     {
-      int randomsize = m_pktSizeRV->GetInteger ();
-      packet = Create<Packet> (m_basePktSize + randomsize);
+      packet = Create<Packet>(size);
     }
   else
     {
-      packet = Create<Packet> (m_basePktSize);
+      packet = Create<Packet>(10);
     }
   m_mac->Send (packet);
 
@@ -124,7 +107,7 @@ PeriodicSender::SendPacket (void)
   m_sendEvent = Simulator::Schedule (m_interval, &PeriodicSender::SendPacket,
                                      this);
 
-  NS_LOG_DEBUG ("Sent a packet of size " << packet->GetSize ());
+  NS_LOG_UNCOND ("Sent a packet of size " << packet->GetSize ());
 }
 
 void
@@ -158,5 +141,4 @@ PeriodicSender::StopApplication (void)
   Simulator::Cancel (m_sendEvent);
 }
 
-}
 }
