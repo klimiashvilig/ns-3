@@ -85,9 +85,9 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
-static const int defaultDistance = 300;
+static const int defaultDistance = 150;
 static const int defaultRunNum = 17;
-static int fileSize = 10000;
+static int fileSize = 200;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -96,10 +96,10 @@ std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-2flows-TC-" + std::to_string((int)TCInterval) + ".txt";
-bool writeInFile = false;
-bool variableDistance = false;
-bool variableRunNum = false;
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-2flows-TC-" + std::to_string((int)TCInterval) + "-additional.txt";
+bool writeInFile = true;
+bool variableDistance = true;
+bool variableRunNum = true;
 
 void stop() {
   double energyConsumed = 0;
@@ -148,13 +148,13 @@ int main (int argc, char *argv[])
 {
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
-  for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += 75) {
+  for (int distance = (variableDistance ? 225:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += 75) {
     int numNodes = (distance * distance / 10) / 500 + 1; // area = distance * distance / 10
     if (numNodes < 4)
       numNodes = 4;
     receiverNode = numNodes - 1;
     std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 1:defaultRunNum); runNum <= (variableRunNum ? 15:defaultRunNum); runNum++) {
+    for (int runNum = (variableRunNum ? 16:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
       RngSeedManager::SetSeed (1);  // Changes seed from default of 1 to 3 (1,1 3,7 4,5 2,3 6,5 7,2 2,6 5,3 4,7 5,5)
       RngSeedManager::SetRun (runNum);   // Changes run number from default of 1 to 7 (3,3 3,2 3,5 3,4 3,1)
 

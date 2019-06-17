@@ -54,12 +54,20 @@ public:
 
   int GetFileSize ();
 
+  void SetSendToAll (bool sendToAll);
+
+  void SetReceiver (uint32_t rec);
+
 private:
   Ptr<Application> InstallPriv (Ptr<Node> node) const;
 
   ObjectFactory m_factory;
 
   int file_size;
+
+  bool send_to_all;
+
+  uint32_t receiver;
 };
 
 } // namespace ns3

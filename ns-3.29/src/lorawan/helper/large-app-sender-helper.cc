@@ -34,6 +34,8 @@ LargeAppSenderHelper::LargeAppSenderHelper ()
 {
   m_factory.SetTypeId ("ns3::LargeAppSender");
   file_size = 100;
+  send_to_all = true;
+  receiver = 1000;
 }
 
 LargeAppSenderHelper::~LargeAppSenderHelper ()
@@ -50,6 +52,19 @@ int
 LargeAppSenderHelper::GetFileSize ()// added
 {
   return file_size;
+}
+
+void
+LargeAppSenderHelper::SetSendToAll (bool sendToAll)// change to setfilesize
+{
+  send_to_all = sendToAll;
+}
+
+void
+LargeAppSenderHelper::SetReceiver (uint32_t rec)// change to setfilesize
+{
+  send_to_all = false;
+  receiver = rec;
 }
 
 void
@@ -85,6 +100,8 @@ LargeAppSenderHelper::InstallPriv (Ptr<Node> node) const
   Ptr<LargeAppSender> app = m_factory.Create<LargeAppSender> ();
 
   app->SetFileSize (file_size); // change
+  if (!send_to_all)
+    app->SetReceiver(receiver);
 
   app->SetNode (node);
   node->AddApplication (app);

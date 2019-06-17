@@ -96,10 +96,10 @@ std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-TC-" + std::to_string((int)TCInterval) + ".txt";
-bool writeInFile = false;
-bool variableDistance = false;
-bool variableRunNum = false;
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-TC-" + std::to_string((int)TCInterval) + "-additional.txt";
+bool writeInFile = true;
+bool variableDistance = true;
+bool variableRunNum = true;
 
 void stop() {
   double energyConsumed = 0;
@@ -152,7 +152,7 @@ int main (int argc, char *argv[])
     int numNodes = (distance * distance / 10) / 500 + 1; // area = distance * distance / 10
     receiverNode = numNodes - 1;
     std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 1:defaultRunNum); runNum <= (variableRunNum ? 15:defaultRunNum); runNum++) {
+    for (int runNum = (variableRunNum ? 16:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
       RngSeedManager::SetSeed (1);
       RngSeedManager::SetRun (runNum);
 

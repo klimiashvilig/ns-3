@@ -56,6 +56,15 @@ public:
   virtual void Send (Ptr<Packet> packet);
 
   /**
+   * Send a packet.
+   *
+   * The MAC layer of the ED will take care of using the right parameters.
+   *
+   * \param packet the packet to send
+   */
+  virtual void SendTo (Ptr<Packet> packet, uint32_t receiver);
+
+  /**
    * Receive a packet.
    *
    * This method is typically registered as a callback in the underlying PHY

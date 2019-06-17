@@ -216,6 +216,17 @@ public:
                      double frequencyMHz, double txPowerDbm) = 0;
 
   /**
+   * Instruct the PHY to send a packet according to some parameters.
+   *
+   * \param packet The packet to send.
+   * \param txParams The desired transmission parameters.
+   * \param frequencyMHz The frequency on which to transmit.
+   * \param txPowerDbm The power in dBm with which to transmit the packet.
+   */
+  virtual void SendTo (Ptr<Packet> packet, LoraTxParameters txParams,
+                     double frequencyMHz, double txPowerDbm, uint32_t receiver) = 0;
+
+  /**
    * Whether this device is transmitting or not.
    *
    * \returns true if the device is currently transmitting a packet, false

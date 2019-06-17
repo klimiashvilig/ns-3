@@ -150,6 +150,66 @@ EndDeviceLoraPhy::Send (Ptr<Packet> packet, LoraTxParameters txParams,
 }
 
 void
+EndDeviceLoraPhy::SendTo (Ptr<Packet> packet, LoraTxParameters txParams,
+                        double frequencyMHz, double txPowerDbm, uint32_t receiver)
+{
+  NS_LOG_FUNCTION (this << packet << txParams << frequencyMHz << txPowerDbm);
+
+  NS_LOG_INFO ("Current state: " << m_state);
+
+  // We must be either in STANDBY or SLEEP mode to send a packet
+  if (m_state != STANDBY && m_state != SLEEP)
+    {
+      NS_LOG_INFO ("Cannot send because device is currently not in STANDBY or SLEEP mode");
+      return;
+    }
+
+  // We can send the packet: switch to the TX state
+  SwitchToTx ();
+
+  // Compute the duration of the transmission
+  Time duration = GetOnAirTime (packet, txParams);
+
+  SwitchHelperToTx(duration, txPowerDbm);
+
+  // Tag the packet with information about its Spreading Factor
+  LoraTag tag;
+  packet->RemovePacketTag (tag);
+  tag.SetSpreadingFactor (txParams.sf);
+  packet->AddPacketTag (tag);
+
+  // Send the packet over the channel
+  NS_LOG_INFO ("Sending the packet in the channel");
+  m_channel->SendTo (this, packet, txPowerDbm, txParams, duration, frequencyMHz, receiver);
+
+  // Schedule the switch back to STANDBY mode.
+  // For reference see SX1272 datasheet, section 4.1.6
+  Simulator::Schedule (duration, &EndDeviceLoraPhy::SwitchToStandby, this);
+
+  // Schedule the txFinished callback, if it was set
+  // The call is scheduled just after the switch to standby in case the upper
+  // layer wishes to change the state. This ensures that it will find a PHY in
+  // STANDBY mode.
+  if (!m_txFinishedCallback.IsNull ())
+    {
+      Simulator::Schedule (duration + NanoSeconds (10),
+                           &EndDeviceLoraPhy::m_txFinishedCallback, this,
+                           packet);
+    }
+
+
+  // Call the trace source
+  if (m_device)
+    {
+      m_startSending (packet, m_device->GetNode ()->GetId ());
+    }
+  else
+    {
+      m_startSending (packet, 0);
+    }
+}
+
+void
 EndDeviceLoraPhy::StartReceive (Ptr<Packet> packet, double rxPowerDbm,
                                 uint8_t sf, Time duration, double frequencyMHz)
 {

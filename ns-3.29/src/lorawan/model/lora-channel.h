@@ -137,6 +137,10 @@ public:
              LoraTxParameters txParams, Time duration, double frequencyMHz)
   const;
 
+  void SendTo (Ptr<LoraPhy> sender, Ptr<Packet> packet, double txPowerDbm,
+             LoraTxParameters txParams, Time duration, double frequencyMHz, uint32_t receiver)
+  const;
+
   /**
     * Compute the received power when transmitting from a point to another one.
     *

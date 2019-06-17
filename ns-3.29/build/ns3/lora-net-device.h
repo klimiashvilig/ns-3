@@ -85,6 +85,13 @@ public:
   void Send (Ptr<Packet> packet);
 
   /**
+   * Send a packet through the LoRaWAN stack.
+   *
+   * \param packet The packet to send.
+   */
+  void SendTo (Ptr<Packet> packet, uint32_t receiver);
+
+  /**
    * Callback the Mac layer calls whenever a packet arrives and needs to be
    * forwarded up the stack.
    *

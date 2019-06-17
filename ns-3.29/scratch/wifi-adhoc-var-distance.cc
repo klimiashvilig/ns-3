@@ -88,7 +88,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 static const int defaultDistance = 300;
 static const int distanceBetweenNodes = 75;
 static const int defaultRunNum = 18;
-static const int fileSize = 200;
+static const int fileSize = 10000;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -97,7 +97,7 @@ std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-TC-" + std::to_string((int)TCInterval) + ".txt";
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-TC-" + std::to_string((int)TCInterval) + "-additional.txt";
 bool writeInFile = true;
 bool variableDistance = true;
 bool variableRunNum = true;
@@ -153,7 +153,7 @@ int main (int argc, char *argv[])
     int numNodes = distance / distanceBetweenNodes + 1; // 75m hops
     receiverNode = numNodes - 1;
     std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 1:defaultRunNum); runNum <= (variableRunNum ? 15:defaultRunNum); runNum++) {
+    for (int runNum = (variableRunNum ? 16:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
       RngSeedManager::SetSeed (1);
       RngSeedManager::SetRun (runNum);
 

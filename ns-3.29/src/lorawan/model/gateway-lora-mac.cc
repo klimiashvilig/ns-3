@@ -92,6 +92,12 @@ GatewayLoraMac::Send (Ptr<Packet> packet)
   m_phy->Send (packet, params, frequency, sendingPower);
 }
 
+void
+GatewayLoraMac::SendTo (Ptr<Packet> packet, uint32_t receiver)
+{
+  NS_LOG_FUNCTION (this << packet << receiver);
+}
+
 bool
 GatewayLoraMac::IsTransmitting (void)
 {

@@ -180,6 +180,81 @@ LoraChannel::Send (Ptr< LoraPhy > sender, Ptr< Packet > packet,
 }
 
 void
+LoraChannel::SendTo (Ptr< LoraPhy > sender, Ptr< Packet > packet,
+                   double txPowerDbm, LoraTxParameters txParams,
+                   Time duration, double frequencyMHz, uint32_t receiver) const
+{
+  NS_LOG_FUNCTION (this << sender << packet << txPowerDbm << txParams <<
+                   duration << frequencyMHz);
+
+  // Get the mobility model of the sender
+  Ptr<MobilityModel> senderMobility = sender->GetMobility ()->GetObject<MobilityModel> ();
+
+  NS_ASSERT (senderMobility != 0); // Make sure it's available
+
+  NS_LOG_INFO ("Starting cycle over all " << m_phyList.size () << " PHYs");
+  NS_LOG_INFO ("Sender mobility: " << senderMobility->GetPosition ());
+
+  // Cycle over all registered PHYs
+  uint32_t j = 0;
+  std::vector<Ptr<LoraPhy> >::const_iterator i;
+  for (i = m_phyList.begin (); i != m_phyList.end (); i++, j++)
+    {
+      // Do not deliver to the sender (*i is the current PHY)
+      if (sender != (*i) && receiver == j)
+        {
+          // Get the receiver's mobility model
+          Ptr<MobilityModel> receiverMobility = (*i)->GetMobility ()->
+            GetObject<MobilityModel> ();
+
+          NS_LOG_INFO ("Receiver mobility: " <<
+                       receiverMobility->GetPosition ());
+
+          // Compute delay using the delay model
+          Time delay = m_delay->GetDelay (senderMobility, receiverMobility);
+
+          // Compute received power using the loss model
+          double rxPowerDbm = GetRxPower (txPowerDbm, senderMobility,
+                                          receiverMobility);
+
+          NS_LOG_DEBUG ("Propagation: txPower=" << txPowerDbm <<
+                        "dbm, rxPower=" << rxPowerDbm << "dbm, " <<
+                        "distance=" << senderMobility->GetDistanceFrom (receiverMobility) <<
+                        "m, delay=" << delay);
+
+          // Get the id of the destination PHY to correctly format the context
+          Ptr<NetDevice> dstNetDevice = m_phyList[j]->GetDevice ();
+          uint32_t dstNode = 0;
+          if (dstNetDevice != 0)
+            {
+              NS_LOG_INFO ("Getting node index from NetDevice, since it exists");
+              dstNode = dstNetDevice->GetNode ()->GetId ();
+              NS_LOG_DEBUG ("dstNode = " << dstNode);
+            }
+          else
+            {
+              NS_LOG_INFO ("No net device connected to the PHY, using context 0");
+            }
+
+          // Create the parameters object based on the calculations above
+          LoraChannelParameters parameters;
+          parameters.rxPowerDbm = rxPowerDbm;
+          parameters.sf = txParams.sf;
+          parameters.duration = duration;
+          parameters.frequencyMHz = frequencyMHz;
+
+          // Schedule the receive event
+          NS_LOG_INFO ("Scheduling reception of the packet");
+          Simulator::ScheduleWithContext (dstNode, delay, &LoraChannel::Receive,
+                                          this, j, packet, parameters);
+
+          // Fire the trace source for sent packet
+          m_packetSent (packet);
+        }
+    }
+}
+
+void
 LoraChannel::Receive (uint32_t i, Ptr<Packet> packet,
                       LoraChannelParameters parameters) const
 {

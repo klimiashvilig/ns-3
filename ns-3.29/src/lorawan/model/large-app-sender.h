@@ -33,7 +33,7 @@ namespace ns3 {
 class LargeAppSender : public Application {
 public:
 
-  LargeAppSender (int fileSize, int dataRate);
+  LargeAppSender (int fileSize, int dataRate, bool sendToAll);
   ~LargeAppSender ();
 
   static TypeId GetTypeId (void);
@@ -47,6 +47,16 @@ public:
    * Set the file size.
    */
   void SetFileSize (int fileSize);
+
+  /**
+   * Set the send_to_all parameter.
+   */
+  void SetSendToAll (bool sendToAll);
+
+  /**
+   * Set the send_to_all parameter.
+   */
+  void SetReceiver (uint32_t rec);
 
   /**
    * Start the application by scheduling the first SendPacket event.
@@ -85,6 +95,13 @@ private:
    * The maximum payload size
    */
   int maximum_payload;
+
+  /*
+   * Whether packets should be sent to all other nodes
+  */
+  bool send_to_all;
+
+  uint32_t receiver;
 };
 
 } //namespace ns3

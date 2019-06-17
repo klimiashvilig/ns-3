@@ -42,7 +42,7 @@ LargeAppSender::GetTypeId (void)
   return tid;
 }
 
-LargeAppSender::LargeAppSender (int fileSize = 100, int dataRate = 6) :
+LargeAppSender::LargeAppSender (int fileSize = 100, int dataRate = 6, bool sendToAll = true) :
   file_size (fileSize)
 {
   NS_LOG_FUNCTION_NOARGS ();
@@ -50,6 +50,7 @@ LargeAppSender::LargeAppSender (int fileSize = 100, int dataRate = 6) :
   if (data_rate <= 2) maximum_payload = 59;
   else if (data_rate == 3) maximum_payload = 123;
   else maximum_payload = 230;
+  send_to_all = sendToAll;
 }
 
 LargeAppSender::~LargeAppSender ()
@@ -63,6 +64,23 @@ LargeAppSender::SetFileSize (int fileSize)
   NS_LOG_FUNCTION (this << fileSize);
 
   file_size = fileSize;
+}
+
+void
+LargeAppSender::SetSendToAll (bool sendToAll)
+{
+  NS_LOG_FUNCTION (this << sendToAll);
+
+  send_to_all = sendToAll;
+}
+
+void
+LargeAppSender::SetReceiver (uint32_t rec)
+{
+  NS_LOG_FUNCTION (this << rec);
+
+  send_to_all = false;
+  receiver = rec;
 }
 
 void
@@ -82,7 +100,10 @@ LargeAppSender::SendPacket (void)
   }
   else return;
   m_mac->GetObject<EndDeviceLoraMac> ()->SetMType(LoraMacHeader::CONFIRMED_DATA_UP);
-  m_mac->Send (packet);
+  if (send_to_all)
+    m_mac->Send (packet);
+  else
+    m_mac->SendTo (packet, receiver);
   m_mac->GetPhy()->SetTxFinishedCallback(MakeCallback(&LargeAppSender::SendNextPacket, this));
 }
 
@@ -116,8 +137,10 @@ LargeAppSender::StartApplication (void)
 
   // Schedule the next SendPacket event
   Simulator::Cancel (m_sendEvent);
-  m_sendEvent = Simulator::Schedule (Seconds(0), &LargeAppSender::SendPacket,
-                                     this);
+  if (send_to_all)
+    m_sendEvent = Simulator::Schedule (Seconds(0), &LargeAppSender::SendPacket, this);
+  else
+    m_sendEvent = Simulator::Schedule (Seconds(0), &LargeAppSender::SendPacket, this);
 }
 
 void

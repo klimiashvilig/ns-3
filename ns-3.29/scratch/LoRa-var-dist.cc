@@ -37,11 +37,11 @@ using namespace ns3;
 int nEndDevices = 1;
 int nGatways = 1;
 static const int defaultDistance = 200;
-static int fileSize = 200;
+static int fileSize = 2302;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
-bool writeInFile = true;
+bool writeInFile = false;
 bool variableDistance = false;
 
 DeviceEnergyModelContainer endDeviceModels;

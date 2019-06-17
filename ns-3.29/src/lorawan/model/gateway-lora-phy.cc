@@ -200,6 +200,13 @@ GatewayLoraPhy::Send (Ptr<Packet> packet, LoraTxParameters txParams,
 }
 
 void
+GatewayLoraPhy::SendTo (Ptr<Packet> packet, LoraTxParameters txParams,
+                      double frequencyMHz, double txPowerDbm, uint32_t receiver)
+{
+  NS_LOG_FUNCTION (this << packet << frequencyMHz << txPowerDbm << receiver);
+}
+
+void
 GatewayLoraPhy::TxFinished (Ptr<Packet> packet)
 {
   m_isTransmitting = false;

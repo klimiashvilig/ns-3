@@ -107,6 +107,10 @@ public:
                      double frequencyMHz, double txPowerDbm);
 
   // Implementation of LoraPhy's pure virtual functions
+  virtual void SendTo (Ptr<Packet> packet, LoraTxParameters txParams,
+                     double frequencyMHz, double txPowerDbm, uint32_t receiver);
+
+  // Implementation of LoraPhy's pure virtual functions
   virtual bool IsOnFrequency (double frequencyMHz);
 
   // Implementation of LoraPhy's pure virtual functions

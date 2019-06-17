@@ -39,6 +39,9 @@ public:
   virtual void Send (Ptr<Packet> packet);
 
   // Implementation of the LoraMac interface
+  virtual void SendTo (Ptr<Packet> packet, uint32_t receiver);
+
+  // Implementation of the LoraMac interface
   bool IsTransmitting (void);
 
   // Implementation of the LoraMac interface

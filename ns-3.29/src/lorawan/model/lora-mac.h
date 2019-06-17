@@ -71,6 +71,13 @@ public:
   virtual void Send (Ptr<Packet> packet) = 0;
 
   /**
+   * Send a packet to a receiver.
+   *
+   * \param packet The packet to send.
+   */
+  virtual void SendTo (Ptr<Packet> packet, uint32_t receiver) = 0;
+
+  /**
    * Receive a packet from the lower layer.
    *
    * \param packet the received packet

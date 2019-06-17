@@ -108,7 +108,6 @@ void
 EndDeviceLoraMac::Send (Ptr<Packet> packet)
 {
   NS_LOG_FUNCTION (this << packet);
-
   // Check that there are no scheduled receive windows.
   // We cannot send a packet if we are in the process of transmitting or waiting
   // for reception.
@@ -174,6 +173,110 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
       NS_ASSERT (m_txPower <= m_channelHelper.GetTxPowerForChannel (txChannel));
       m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToStandby ();
       m_phy->Send (packet, params, txChannel->GetFrequency (), m_txPower);
+
+      //////////////////////////////////////////////
+      // Register packet transmission for duty cycle
+      //////////////////////////////////////////////
+
+      // Compute packet duration
+      Time duration = m_phy->GetOnAirTime (packet, params);
+
+      // Register the sent packet into the DutyCycleHelper
+      m_channelHelper.AddEvent (duration, txChannel);
+
+      //////////////////////////////
+      // Prepare for the downlink //
+      //////////////////////////////
+
+      // Switch the PHY to the channel so that it will listen here for downlink
+      m_phy->GetObject<EndDeviceLoraPhy> ()->SetFrequency (txChannel->GetFrequency ());
+
+      // Instruct the PHY on the right Spreading Factor to listen for during the window
+      uint8_t replyDataRate = GetFirstReceiveWindowDataRate ();
+      NS_LOG_DEBUG ("m_dataRate: " << unsigned (m_dataRate) <<
+                    ", m_rx1DrOffset: " << unsigned (m_rx1DrOffset) <<
+                    ", replyDataRate: " << unsigned (replyDataRate));
+
+      m_phy->GetObject<EndDeviceLoraPhy> ()->SetSpreadingFactor
+        (GetSfFromDataRate (replyDataRate));
+
+    }
+  else // Transmission cannot be performed
+    {
+      m_cannotSendBecauseDutyCycle (packet);
+    }
+}
+
+void
+EndDeviceLoraMac::SendTo (Ptr<Packet> packet, uint32_t receiver)
+{
+  NS_LOG_FUNCTION (this << packet << receiver);
+
+  // Check that there are no scheduled receive windows.
+  // We cannot send a packet if we are in the process of transmitting or waiting
+  // for reception.
+  if (!m_closeWindow.IsExpired () || !m_secondReceiveWindow.IsExpired ())
+    {
+      NS_LOG_WARN ("Attempting to send when there are receive windows" <<
+                   " Transmission canceled");
+      return;
+    }
+
+  // Check that payload length is below the allowed maximum
+  if (packet->GetSize () > m_maxAppPayloadForDataRate.at (m_dataRate))
+    {
+      NS_LOG_WARN ("Attempting to send a packet larger than the maximum allowed"
+                   << " size at this DataRate (DR" << unsigned(m_dataRate) <<
+                   "). Transmission canceled.");
+      return;
+    }
+
+  // Check that we can transmit according to the aggregate duty cycle timer
+  if (m_channelHelper.GetAggregatedWaitingTime () != Seconds (0))
+    {
+      NS_LOG_WARN ("Attempting to send, but the aggregate duty cycle won't allow it");
+      return;
+    }
+
+  // Pick a channel on which to transmit the packet
+  Ptr<LogicalLoraChannel> txChannel = GetChannelForTx ();
+
+  if (txChannel) // Proceed with transmission
+    {
+      /////////////////////////////////////////////////////////
+      // Add headers, prepare TX parameters and send the packet
+      /////////////////////////////////////////////////////////
+
+      // Add the Lora Frame Header to the packet
+      LoraFrameHeader frameHdr;
+      ApplyNecessaryOptions (frameHdr);
+      packet->AddHeader (frameHdr);
+      NS_LOG_INFO ("Added frame header of size " << frameHdr.GetSerializedSize () <<
+                   " bytes");
+
+      // Add the Lora Mac header to the packet
+      LoraMacHeader macHdr;
+      ApplyNecessaryOptions (macHdr);
+      packet->AddHeader (macHdr);
+      NS_LOG_INFO ("Added MAC header of size " << macHdr.GetSerializedSize () <<
+                   " bytes");
+
+      // Craft LoraTxParameters object
+      LoraTxParameters params;
+      params.sf = GetSfFromDataRate (m_dataRate);
+      params.headerDisabled = m_headerDisabled;
+      params.codingRate = m_codingRate;
+      params.bandwidthHz = GetBandwidthFromDataRate (m_dataRate);
+      params.nPreamble = m_nPreambleSymbols;
+      params.crcEnabled = 1;
+      params.lowDataRateOptimizationEnabled = 0;
+
+      // Wake up PHY layer and directly send the packet
+
+      // Make sure we can transmit at the current power on this channel
+      NS_ASSERT (m_txPower <= m_channelHelper.GetTxPowerForChannel (txChannel));
+      m_phy->GetObject<EndDeviceLoraPhy> ()->SwitchToStandby ();
+      m_phy->SendTo (packet, params, txChannel->GetFrequency (), m_txPower, receiver);
 
       //////////////////////////////////////////////
       // Register packet transmission for duty cycle

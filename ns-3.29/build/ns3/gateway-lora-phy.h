@@ -62,6 +62,9 @@ public:
   virtual void Send (Ptr<Packet> packet, LoraTxParameters txParams,
                      double frequencyMHz, double txPowerDbm);
 
+  virtual void SendTo (Ptr<Packet> packet, LoraTxParameters txParams,
+                     double frequencyMHz, double txPowerDbm, uint32_t receiver);
+
   virtual void TxFinished (Ptr<Packet> packet);
 
   bool IsTransmitting (void);
