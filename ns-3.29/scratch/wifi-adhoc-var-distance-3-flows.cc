@@ -85,13 +85,9 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
-static const int defaultDistance = 450;
-<<<<<<< HEAD
+static const int defaultDistance = 300;
 static const int defaultRunNum = 30;
-=======
-static const int defaultRunNum = 1;
->>>>>>> 913abe7e3d53a6fc4d574970246f199c3384512c
-static int fileSize = 200;
+static int fileSize = 10000;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -100,13 +96,8 @@ std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
-<<<<<<< HEAD
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-3flows.txt";
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-3flows.txt";
 bool writeInFile = true;
-=======
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-3flows-3" + ".txt";
-bool writeInFile = false;
->>>>>>> 913abe7e3d53a6fc4d574970246f199c3384512c
 bool variableDistance = true;
 bool variableRunNum = true;
 
@@ -157,35 +148,17 @@ int main (int argc, char *argv[])
 {
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
-  for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 450:defaultDistance); distance += 75) {
+  for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += 75) {
     int numNodes = (distance * distance / 10) / 500 + 3; // area = distance * distance / 10
-<<<<<<< HEAD
     if (distance == 75)
       numNodes = 6;
     else if (distance == 150)
       numNodes = 9;
     receiverNode = numNodes - 1;
     std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 6:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
-=======
-    double alternativeApplicationStartTime = 2;
-    double alternativeApplicationEndTime = 4;
-    if (distance == 75) {
-      numNodes = 6;
-      alternativeApplicationStartTime = 0;
-      alternativeApplicationEndTime = 0.1;
-    }
-	else if (distance == 150) {
-	  numNodes = 9;
-	  alternativeApplicationStartTime = 1;
-      alternativeApplicationEndTime = 1.1;
-	}
-    receiverNode = numNodes - 1;
-    std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 21:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
->>>>>>> 913abe7e3d53a6fc4d574970246f199c3384512c
-      RngSeedManager::SetSeed (1);  // Changes seed from default of 1 to 3 (1,1 3,7 4,5 2,3 6,5 7,2 2,6 5,3 4,7 5,5)
-      RngSeedManager::SetRun (runNum);   // Changes run number from default of 1 to 7 (3,3 3,2 3,5 3,4 3,1)
+    for (int runNum = (variableRunNum ? 1:defaultRunNum); runNum <= (variableRunNum ? 15:defaultRunNum); runNum++) {
+      RngSeedManager::SetSeed (1);  // Changes seed number
+      RngSeedManager::SetRun (runNum);   // Changes run number
 
       std::string phyMode ("ErpOfdmRate54Mbps");
 
@@ -310,9 +283,7 @@ int main (int argc, char *argv[])
                          InetSocketAddress (i.GetAddress (receiverNode - 1), 9));
         secondFlowOnOff.SetConstantRate(DataRate("54Mbps"));
         ApplicationContainer secondFlowSourceApps = secondFlowOnOff.Install (c.Get (senderNode + 1));
-        double secondStartTime = alternativeApplicationStartTime + (float)rand()/(float)(RAND_MAX/(alternativeApplicationEndTime - alternativeApplicationStartTime));
-        std::cout << "Second Start Time = " << secondStartTime << std::endl;
-        secondFlowSourceApps.Start (Seconds (secondStartTime));
+        secondFlowSourceApps.Start (Seconds (0.0));
         secondFlowSourceApps.Stop (Seconds (10000.0));
 
         PacketSinkHelper secondFlowSink ("ns3::UdpSocketFactory",
@@ -320,16 +291,14 @@ int main (int argc, char *argv[])
 
         ApplicationContainer secondFlowSinkApps = secondFlowSink.Install (c.Get (receiverNode - 1));
 
-        secondFlowSinkApps.Start (Seconds (secondStartTime));
+        secondFlowSinkApps.Start (Seconds (0.0));
         secondFlowSinkApps.Stop (Seconds (10000.0));
 
         OnOffHelper thirdFlowOnOff("ns3::UdpSocketFactory",
                          InetSocketAddress (i.GetAddress (receiverNode - 2), 9));
         thirdFlowOnOff.SetConstantRate(DataRate("54Mbps"));
         ApplicationContainer thirdFlowSourceApps = thirdFlowOnOff.Install (c.Get (senderNode + 2));
-        double thirdStartTime = alternativeApplicationStartTime + (float)rand()/(float)(RAND_MAX/(alternativeApplicationEndTime - alternativeApplicationStartTime));
-        std::cout << "Third Start Time = " << thirdStartTime << std::endl;
-        thirdFlowSourceApps.Start (Seconds (thirdStartTime));
+        thirdFlowSourceApps.Start (Seconds (0.0));
         thirdFlowSourceApps.Stop (Seconds (10000.0));
 
         PacketSinkHelper thirdFlowSink ("ns3::UdpSocketFactory",
@@ -337,7 +306,7 @@ int main (int argc, char *argv[])
 
         ApplicationContainer thirdFlowSinkApps = thirdFlowSink.Install (c.Get (receiverNode - 2));
 
-        thirdFlowSinkApps.Start (Seconds (thirdStartTime));
+        thirdFlowSinkApps.Start (Seconds (0.0));
         thirdFlowSinkApps.Stop (Seconds (10000.0));
       }
 
