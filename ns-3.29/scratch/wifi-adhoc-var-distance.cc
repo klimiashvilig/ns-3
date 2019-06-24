@@ -88,7 +88,7 @@ NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 static const int defaultDistance = 300;
 static const int distanceBetweenNodes = 75;
 static const int defaultRunNum = 18;
-static const int fileSize = 10000;
+static const int fileSize = 200;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -97,9 +97,9 @@ std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-TC-" + std::to_string((int)TCInterval) + "-additional.txt";
-bool writeInFile = true;
-bool variableDistance = true;
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-TC-" + std::to_string((int)TCInterval) + ".txt";
+bool writeInFile = false;
+bool variableDistance = false;
 bool variableRunNum = true;
 
 void stop() {
@@ -150,10 +150,10 @@ int main (int argc, char *argv[])
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
   for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += distanceBetweenNodes) {
-    int numNodes = distance / distanceBetweenNodes + 1; // 75m hops
+    int numNodes = distance / distanceBetweenNodes + 1;
     receiverNode = numNodes - 1;
     std::cout << "Distance = " << distance << std::endl;
-    for (int runNum = (variableRunNum ? 16:defaultRunNum); runNum <= (variableRunNum ? 30:defaultRunNum); runNum++) {
+    for (int runNum = (variableRunNum ? 1:defaultRunNum); runNum <= (variableRunNum ? 15:defaultRunNum); runNum++) {
       RngSeedManager::SetSeed (1);
       RngSeedManager::SetRun (runNum);
 
@@ -275,7 +275,6 @@ int main (int argc, char *argv[])
       /***************************************************************************/
 
       // Tracing
-      wifiPhy.EnablePcap ("wifi-adhoc", devices);
 
       sink1 = DynamicCast<PacketSink>(sinkApps.Get(0)); // get sink
 

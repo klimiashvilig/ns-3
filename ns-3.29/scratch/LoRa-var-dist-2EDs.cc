@@ -37,11 +37,11 @@ using namespace ns3;
 int nEndDevices = 2;
 int nGatways = 1;
 static const int defaultDistance = 200;
-static int fileSize = 232;
+static int fileSize = 2300;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
-bool writeInFile = true;
+bool writeInFile = false;
 bool variableDistance = false;
 
 DeviceEnergyModelContainer endDeviceModels;
@@ -49,8 +49,8 @@ DeviceEnergyModelContainer gatewayModels;
 
 void 
 PacketReceptionCallback(Ptr<Packet const> packet, uint32_t systemId) {
-  std::cout << "Packet received" << std::endl;
-  std::cout << "End of simulation! Simulation time - " << Simulator::Now ().GetSeconds () << "s" << std::endl;
+  std::cout << "Packet size - " << packet->GetSize() << "B" << std::endl;
+  std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s" << std::endl;
 }
 
 int main (int argc, char *argv[])

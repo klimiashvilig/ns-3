@@ -149,9 +149,11 @@ int main (int argc, char *argv[])
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
   for (fileSize = (variableFileSize ? 50:defaultFileSize); fileSize <= (variableFileSize ? 10000:defaultFileSize); fileSize += ((fileSize < 1000) ? 50:200)) {
-    int numNodes = (distance * distance / 10) / 500 + 1; // area = distance * distance / 10
-    if (numNodes < 4)
-      numNodes = 4;
+    int numNodes = (distance * distance / 10) / 500 + 3; // area = distance * distance / 10
+    if (distance == 75)
+      numNodes = 6;
+    else if (distance == 150)
+      numNodes = 9;
     receiverNode = numNodes - 1;
     std::cout << "File size = " << fileSize << std::endl;
     for (int runNum = 1; runNum <= (variableRunNum ? 15:1); runNum++) {
