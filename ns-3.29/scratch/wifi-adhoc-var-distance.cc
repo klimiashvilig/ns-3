@@ -96,11 +96,23 @@ static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
+bool routing = false;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-TC-" + std::to_string((int)TCInterval) + ".txt";
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B" + (routing? "":"-nr") + ".txt";
 bool writeInFile = false;
 bool variableDistance = false;
 bool variableRunNum = true;
+
+double initialEnergy;
+
+void getInitialEnergy() {
+  initialEnergy = 0;
+  for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin (); 
+                      iter != deviceModels.End (); iter ++)
+  {
+    initialEnergy += (*iter)->GetTotalEnergyConsumption ();
+  }
+}
 
 void stop() {
   double energyConsumed = 0;
@@ -109,13 +121,15 @@ void stop() {
   {
     energyConsumed += (*iter)->GetTotalEnergyConsumption ();
   }
-  std::cout << "End of simulation (" << Simulator::Now ().GetSeconds()
+  if (!routing)
+    energyConsumed -= initialEnergy;
+  std::cout << "End of simulation (" << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0))
     << "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
   if (writeInFile) {
     if (!myFile.is_open()) {
       myFile.open(fileName, std::ofstream::app);
     }
-    myFile << Simulator::Now ().GetSeconds() << "," << energyConsumed << ",";
+    myFile << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0)) << "," << energyConsumed << ",";
     myFile.close();
   }
   Simulator::Stop();
@@ -131,13 +145,15 @@ PacketSinkTraceSink (Ptr<const Packet> packet, const Address &from)
     {
       energyConsumed += (*iter)->GetTotalEnergyConsumption ();
     }
-    std::cout << "End of simulation (" << Simulator::Now ().GetSeconds()
+    if (!routing)
+      energyConsumed -= initialEnergy;
+    std::cout << "End of simulation (" << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0))
       << "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
     if (writeInFile) {
       if (!myFile.is_open()) {
         myFile.open(fileName, std::ofstream::app);
       }
-      myFile << Simulator::Now ().GetSeconds() << "," << energyConsumed << ",";
+      myFile << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0)) << "," << energyConsumed << ",";
       myFile.close();
     }
     Simulator::Stop ();
@@ -205,7 +221,6 @@ int main (int argc, char *argv[])
       // used for received signal strength.
       MobilityHelper mobility;
       Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-      srand (time(NULL));
       double x, y;
       for (int i = 0; i < numNodes; i++) {
             x = i * distanceBetweenNodes + 70;
@@ -244,7 +259,7 @@ int main (int argc, char *argv[])
                          InetSocketAddress (i.GetAddress (receiverNode), 9));
       onOff.SetConstantRate(DataRate("54Mbps"));
       ApplicationContainer sourceApps = onOff.Install (c.Get (senderNode));
-      sourceApps.Start (Seconds (0.0));
+      sourceApps.Start (Seconds ((routing? 0:20)));
       sourceApps.Stop (Seconds (10000.0));
 
       PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -252,7 +267,7 @@ int main (int argc, char *argv[])
 
       ApplicationContainer sinkApps = sink.Install (c.Get (receiverNode));
 
-      sinkApps.Start (Seconds (0.0));
+      sinkApps.Start (Seconds ((routing? 0:20)));
       sinkApps.Stop (Seconds (10000.0));
 
       //---------------------------------------------------
@@ -281,7 +296,10 @@ int main (int argc, char *argv[])
       std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
       Config::ConnectWithoutContext (str, MakeCallback (&PacketSinkTraceSink));
 
-      Simulator::Schedule(Seconds(20), &stop);
+      if (!routing)
+        Simulator::Schedule(Seconds(20), &getInitialEnergy);
+
+      Simulator::Schedule(Seconds((routing? 20:40)), &stop);
 
       Simulator::Run ();
       Simulator::Destroy ();
@@ -291,6 +309,7 @@ int main (int argc, char *argv[])
         myFile.open(fileName, std::ofstream::app);
       }
       myFile << "\n";
+      myFile.close();
     }
   }
   return 0;

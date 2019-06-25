@@ -95,11 +95,23 @@ static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
+bool routing = true;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-3flows.txt";
-bool writeInFile = true;
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-3flows" + (routing? "":"-nr") + ".txt";
+bool writeInFile = false;
 bool variableDistance = true;
 bool variableRunNum = true;
+
+double initialEnergy;
+
+void getInitialEnergy() {
+  initialEnergy = 0;
+  for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin (); 
+                      iter != deviceModels.End (); iter ++)
+  {
+    initialEnergy += (*iter)->GetTotalEnergyConsumption ();
+  }
+}
 
 void stop() {
   double energyConsumed = 0;
@@ -108,13 +120,15 @@ void stop() {
   {
     energyConsumed += (*iter)->GetTotalEnergyConsumption ();
   }
-  std::cout << "End of simulation (" << Simulator::Now ().GetSeconds()
+  if (!routing)
+    energyConsumed -= initialEnergy;
+  std::cout << "End of simulation (" << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0))
     << "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
   if (writeInFile) {
     if (!myFile.is_open()) {
       myFile.open(fileName, std::ofstream::app);
     }
-    myFile << Simulator::Now ().GetSeconds() << "," << energyConsumed << ",";
+    myFile << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0)) << "," << energyConsumed << ",";
     myFile.close();
   }
   Simulator::Stop();
@@ -130,13 +144,15 @@ PacketSinkTraceSink (Ptr<const Packet> packet, const Address &from)
     {
       energyConsumed += (*iter)->GetTotalEnergyConsumption ();
     }
-    std::cout << "End of simulation (" << Simulator::Now ().GetSeconds()
+    if (!routing)
+      energyConsumed -= initialEnergy;
+    std::cout << "End of simulation (" << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0))
       << "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
     if (writeInFile) {
       if (!myFile.is_open()) {
         myFile.open(fileName, std::ofstream::app);
       }
-      myFile << Simulator::Now ().GetSeconds() << "," << energyConsumed << ",";
+      myFile << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0)) << "," << energyConsumed << ",";
       myFile.close();
     }
     Simulator::Stop ();
@@ -208,12 +224,12 @@ int main (int argc, char *argv[])
       // used for received signal strength.
       MobilityHelper mobility;
       Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-      srand (time(NULL));
+      Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable> ();
       double x, y;
       positionAlloc->Add(Vector(0, 70, 0.0));
       for (int i = 0; i < numNodes - 2; i++) {
-            x = rand() % distance;
-            y = rand() % (distance / 10) + 70 - distance / 20;
+            x = r->GetValue(0, distance);
+            y = r->GetValue(0, (double)distance / 10.0) + 70.0 - (double)distance / 20.0;
             positionAlloc->Add (Vector (x, y, 0.0));
       }
       positionAlloc->Add(Vector(distance, 70, 0.0));
@@ -249,7 +265,7 @@ int main (int argc, char *argv[])
                          InetSocketAddress (i.GetAddress (receiverNode), 9));
       onOff.SetConstantRate(DataRate("54Mbps"));
       ApplicationContainer sourceApps = onOff.Install (c.Get (senderNode));
-      sourceApps.Start (Seconds (0.0));
+      sourceApps.Start (Seconds ((routing? 0:20)));
       sourceApps.Stop (Seconds (10000.0));
 
       PacketSinkHelper sink ("ns3::UdpSocketFactory",
@@ -257,7 +273,7 @@ int main (int argc, char *argv[])
 
       ApplicationContainer sinkApps = sink.Install (c.Get (receiverNode));
 
-      sinkApps.Start (Seconds (0.0));
+      sinkApps.Start (Seconds ((routing? 0:20)));
       sinkApps.Stop (Seconds (10000.0));
 
       //---------------------------------------------------
@@ -279,11 +295,25 @@ int main (int argc, char *argv[])
 
       /***************************************************************************/
       if (numNodes >= 6) {
+        double secondFlowOffset;
+        double thirdFlowOffset;
+        if (distance == 75) {
+          secondFlowOffset = r->GetValue(0, 0.5);
+          thirdFlowOffset = r->GetValue(0, 0.5);
+        }
+        else if (distance == 150) {
+          secondFlowOffset = r->GetValue(1, 1.5);
+          thirdFlowOffset = r->GetValue(1, 1.5);
+        }
+        else {
+          secondFlowOffset = r->GetValue(2, 4);
+          thirdFlowOffset = r->GetValue(2, 4);
+        }
         OnOffHelper secondFlowOnOff("ns3::UdpSocketFactory",
                          InetSocketAddress (i.GetAddress (receiverNode - 1), 9));
         secondFlowOnOff.SetConstantRate(DataRate("54Mbps"));
         ApplicationContainer secondFlowSourceApps = secondFlowOnOff.Install (c.Get (senderNode + 1));
-        secondFlowSourceApps.Start (Seconds (0.0));
+        secondFlowSourceApps.Start (Seconds (secondFlowOffset + (routing? 0.0:20.0)));
         secondFlowSourceApps.Stop (Seconds (10000.0));
 
         PacketSinkHelper secondFlowSink ("ns3::UdpSocketFactory",
@@ -291,14 +321,14 @@ int main (int argc, char *argv[])
 
         ApplicationContainer secondFlowSinkApps = secondFlowSink.Install (c.Get (receiverNode - 1));
 
-        secondFlowSinkApps.Start (Seconds (0.0));
+        secondFlowSinkApps.Start (Seconds (secondFlowOffset + (routing? 0.0:20.0)));
         secondFlowSinkApps.Stop (Seconds (10000.0));
 
         OnOffHelper thirdFlowOnOff("ns3::UdpSocketFactory",
                          InetSocketAddress (i.GetAddress (receiverNode - 2), 9));
         thirdFlowOnOff.SetConstantRate(DataRate("54Mbps"));
         ApplicationContainer thirdFlowSourceApps = thirdFlowOnOff.Install (c.Get (senderNode + 2));
-        thirdFlowSourceApps.Start (Seconds (0.0));
+        thirdFlowSourceApps.Start (Seconds (thirdFlowOffset + (routing? 0.0:20.0)));
         thirdFlowSourceApps.Stop (Seconds (10000.0));
 
         PacketSinkHelper thirdFlowSink ("ns3::UdpSocketFactory",
@@ -306,19 +336,21 @@ int main (int argc, char *argv[])
 
         ApplicationContainer thirdFlowSinkApps = thirdFlowSink.Install (c.Get (receiverNode - 2));
 
-        thirdFlowSinkApps.Start (Seconds (0.0));
+        thirdFlowSinkApps.Start (Seconds (thirdFlowOffset + (routing? 0.0:20.0)));
         thirdFlowSinkApps.Stop (Seconds (10000.0));
       }
 
       // Tracing
-      wifiPhy.EnablePcap ("wifi-adhoc", devices);
 
       sink1 = DynamicCast<PacketSink>(sinkApps.Get(0)); // get sink
 
       std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
       Config::ConnectWithoutContext (str, MakeCallback (&PacketSinkTraceSink));
 
-      Simulator::Schedule(Seconds(20), &stop);
+      if (!routing)
+        Simulator::Schedule(Seconds(20), &getInitialEnergy);
+
+      Simulator::Schedule(Seconds((routing? 20:40)), &stop);
 
       Simulator::Run ();
       Simulator::Destroy ();

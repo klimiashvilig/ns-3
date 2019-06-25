@@ -97,8 +97,8 @@ Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 bool routing = false;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random-nr.txt";
-bool writeInFile = true;
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random" + (routing? "":"-nr") + ".txt";
+bool writeInFile = false;
 bool variableDistance = true;
 bool variableRunNum = true;
 
@@ -120,8 +120,8 @@ void stop() {
   {
     energyConsumed += (*iter)->GetTotalEnergyConsumption ();
   }
-    if (!routing)
-      energyConsumed -= initialEnergy;
+  if (!routing)
+    energyConsumed -= initialEnergy;
   std::cout << "End of simulation (" << (Simulator::Now ().GetSeconds() - (routing? 0.0:20.0))
     << "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
   if (writeInFile) {
@@ -224,12 +224,12 @@ int main (int argc, char *argv[])
       // used for received signal strength.
       MobilityHelper mobility;
       Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-      srand (time(NULL));
+      Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable> ();
       double x, y;
       positionAlloc->Add(Vector(0, 70, 0.0));
       for (int i = 0; i < numNodes - 2; i++) {
-            x = rand() % distance;
-            y = rand() % (distance / 10) + 70 - distance / 20;
+            x = r->GetValue(0, distance);
+            y = r->GetValue(0, (double)distance / 10.0) + 70.0 - (double)distance / 20.0;
             positionAlloc->Add (Vector (x, y, 0.0));
       }
       positionAlloc->Add(Vector(distance, 70, 0.0));
