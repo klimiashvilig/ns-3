@@ -191,6 +191,8 @@ int main(int argc, char * argv[]) {
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode",
     StringValue(phyMode));
+  Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold",
+    UintegerValue(200));
 
   NodeContainer c;
   c.Create(numNodes);
