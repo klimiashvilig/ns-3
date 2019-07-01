@@ -32,6 +32,38 @@
 #include "ns3/energy-module.h"
 #include "ns3/lora-energy-model-helper.h"
 
+#include "ns3/command-line.h"
+#include "ns3/config.h"
+#include "ns3/double.h"
+#include "ns3/string.h"
+#include "ns3/log.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/ipv4-address-helper.h"
+#include "ns3/yans-wifi-channel.h"
+#include "ns3/mobility-model.h"
+#include "ns3/internet-stack-helper.h"
+#include "ns3/olsr-helper.h"
+#include "ns3/core-module.h"
+#include "ns3/wifi-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/point-to-point-module.h"
+#include "ns3/ipv4-global-routing-helper.h"
+#include "ns3/applications-module.h"
+#include "ns3/network-module.h"
+#include "ns3/nstime.h"
+#include "ns3/device-energy-model-container.h"
+#include "ns3/basic-energy-source-helper.h"
+#include "ns3/energy-module.h"
+
+#include <cstdlib>
+#include <stdlib.h>
+#include <time.h>
+
+#include <iostream>
+#include <fstream>
+
+
 using namespace ns3;
 
 int nEndDevices = 1;
@@ -64,6 +96,8 @@ int main (int argc, char *argv[])
   for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += 75) {
     CommandLine cmd;
     cmd.Parse (argc, argv);
+    RngSeedManager::SetSeed (1);
+    RngSeedManager::SetRun (1);
 
     // Mobility
     MobilityHelper mobility;

@@ -37,7 +37,7 @@ using namespace ns3;
 int nEndDevices = 2;
 int nGatways = 1;
 static const int defaultDistance = 200;
-static int fileSize = 2300;
+static int fileSize = 2302;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
@@ -151,7 +151,7 @@ int main (int argc, char *argv[])
 
     appContainer1.Start (Seconds (0));
     appContainer1.Stop (appStopTime);
-    appContainer2.Start (Seconds (0));
+    appContainer2.Start (Seconds (0.2));
     appContainer2.Stop (appStopTime);
 
     Ptr<Node> object = gateways.Get(0);

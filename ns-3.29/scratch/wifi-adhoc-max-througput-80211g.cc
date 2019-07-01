@@ -118,6 +118,8 @@ int main (int argc, char *argv[])
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                       StringValue (phyMode));
+  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", UintegerValue(200));
+
 
   NodeContainer c;
   c.Create (2);
@@ -185,7 +187,7 @@ int main (int argc, char *argv[])
   OnOffHelper onOff ("ns3::UdpSocketFactory",
                      InetSocketAddress (i.GetAddress (receiverNode), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
-  onOff.SetAttribute ("PacketSize", UintegerValue (2048));
+  //onOff.SetAttribute ("PacketSize", UintegerValue (1472));
   ApplicationContainer sourceApps = onOff.Install (c.Get (senderNode));
   sourceApps.Start (Seconds (0.0));
   sourceApps.Stop (Seconds (10000.0));
