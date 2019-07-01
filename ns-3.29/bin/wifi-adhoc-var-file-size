@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeInFile=true;
+routing=true;
+distance=75;
+
+for fileSize in {100..10000..100}
+do
+	for runNum in {1..30}
+	do
+		if [ "$runNum" -ne 30 ]
+		then
+			./waf --run "wifi-adhoc-var-file-size --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize"
+		else
+			./waf --run "wifi-adhoc-var-file-size --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true"
+		fi
+	done
+done
+
+
+
