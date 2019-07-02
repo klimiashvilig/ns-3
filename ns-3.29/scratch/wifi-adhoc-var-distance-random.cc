@@ -87,9 +87,9 @@ static int fileSize = 10000;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
-static int receiverNode; // = numNodes - 1;
+static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
-Ptr < PacketSink > sink1;
+Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 bool routing = false;
 bool writeInFile = false;
@@ -101,14 +101,14 @@ double initialEnergy;
 void getInitialEnergy() {
   initialEnergy = 0;
   for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-    initialEnergy += ( * iter)->GetTotalEnergyConsumption();
+    initialEnergy += (*iter)->GetTotalEnergyConsumption();
   }
 }
 
 void stop() {
   double energyConsumed = 0;
   for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-    energyConsumed += ( * iter)->GetTotalEnergyConsumption();
+    energyConsumed += (*iter)->GetTotalEnergyConsumption();
   }
   if (!routing)
     energyConsumed -= initialEnergy;
@@ -125,11 +125,11 @@ void stop() {
 }
 
 void
-PacketSinkTraceSink(Ptr <const Packet > packet, const Address & from) {
+PacketSinkTraceSink(Ptr<const Packet > packet, const Address & from) {
   if ((int) sink1->GetTotalRx() >= fileSize) {
     double energyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-      energyConsumed += ( * iter)->GetTotalEnergyConsumption();
+      energyConsumed += (*iter)->GetTotalEnergyConsumption();
     }
     if (!routing)
       energyConsumed -= initialEnergy;

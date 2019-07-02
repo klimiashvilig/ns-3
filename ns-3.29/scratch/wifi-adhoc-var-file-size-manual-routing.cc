@@ -83,8 +83,11 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
 
+int distance = 75;
 static const int distanceBetweenNodes = 75;
-static int fileSize = 10000;
+static int fileSize;
+static const double helloInterval = 0.5;
+static const double TCInterval = 1;
 static const int senderNode = 0;
 static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
@@ -92,12 +95,12 @@ Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
 bool writeInFile = false;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "-B-manual-routing.txt";
+std::string fileName = "wifiresults-" + std::to_string(distance) + "m-manual-routing.txt";
 
 void stop() {
   double energyConsumed = 0;
   for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-    energyConsumed += (*iter)->GetTotalEnergyConsumption();
+    energyConsumed += ( * iter)->GetTotalEnergyConsumption();
   }
   std::cout << "End of simulation (" << Simulator::Now().GetSeconds() <<
     "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
@@ -112,13 +115,11 @@ void stop() {
 }
 
 void
-PacketSinkTraceSink(Ptr <
-  const Packet > packet,
-    const Address & from) {
+PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
   if ((int) sink1->GetTotalRx() >= fileSize) {
     double energyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-      energyConsumed += (*iter)->GetTotalEnergyConsumption();
+      energyConsumed += ( * iter)->GetTotalEnergyConsumption();
     }
     std::cout << "End of simulation (" << Simulator::Now().GetSeconds() <<
       "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
@@ -135,7 +136,7 @@ PacketSinkTraceSink(Ptr <
 }
 
 int main(int argc, char * argv[]) {
-  int distance = 300;
+  int fileSize = 200;
   int runNum = 1;
   bool endLine = false;
 
@@ -156,17 +157,17 @@ int main(int argc, char * argv[]) {
   RngSeedManager::SetSeed(1);
   RngSeedManager::SetRun(runNum);
 
-  int numNodes = distance / distanceBetweenNodes + 1;
+  int numNodes = distance / distanceBetweenNodes + 1; // 75m hops
   receiverNode = numNodes - 1;
 
   std::string phyMode("ErpOfdmRate54Mbps");
 
-  fileName = "wifiresults-" + std::to_string(fileSize) + "B-manual-routing.txt";
-  std::cout << fileName << std::endl;
+  fileName = "wifiresults-" + std::to_string(fileSize) + "m-manual-routing.txt";
+
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
 
-  //LogComponentEnable ("RoutingProtocol", LOG_LEVEL_ALL);
+  //LogComponentEnable ("AdhocWifiMac", LOG_LEVEL_ALL);
 
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode",
@@ -180,6 +181,7 @@ int main(int argc, char * argv[]) {
   for (int i = 0; i < numNodes - 1; i++) {
     n[i] = NodeContainer(c.Get(i), c.Get(i + 1));
   }
+
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -293,6 +295,7 @@ int main(int argc, char * argv[]) {
   /***************************************************************************/
 
   // Tracing
+
   sink1 = DynamicCast < PacketSink > (sinkApps.Get(0)); // get sink
 
   std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
