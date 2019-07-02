@@ -3,7 +3,7 @@
 cd ..
 
 writeInFile=true;
-fileSize=200;
+fileSize=10000;
 
 for distance in {75..600..75}
 do
