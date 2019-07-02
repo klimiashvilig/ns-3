@@ -237,7 +237,7 @@ int main(int argc, char * argv[]) {
   for (int i = 0; i < numNodes - 2; i++) {
     x = r->GetValue(0, distance);
     y = r->GetValue(0, (double) distance / 10.0) + 70.0 - (double) distance / 20.0;
-    std::cout << "x - " << x << "y - " << y << std::endl;
+    std::cout << "x - " << x << " y - " << y << std::endl;
     positionAlloc->Add(Vector(x, y, 0.0));
   }
   positionAlloc->Add(Vector(distance, 70, 0.0));
@@ -272,7 +272,6 @@ int main(int argc, char * argv[]) {
   OnOffHelper onOff("ns3::UdpSocketFactory",
     InetSocketAddress(i.GetAddress(receiverNode), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
-  onOff.SetAttribute("PacketSize", UintegerValue(1472));
   ApplicationContainer sourceApps = onOff.Install(c.Get(senderNode));
   sourceApps.Start(Seconds((routing ? 0 : 20)));
   sourceApps.Stop(Seconds(10000.0));

@@ -94,7 +94,7 @@ DeviceEnergyModelContainer deviceModels;
 bool routing = false;
 bool writeInFile = false;
 
-std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-random" + (routing ? "" : "-nr") + ".txt";
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-1flow" + (routing ? "" : "-nr") + ".txt";
 
 double initialEnergy;
 
@@ -181,7 +181,7 @@ int main(int argc, char * argv[]) {
 
   std::string phyMode("ErpOfdmRate54Mbps");
 
-  fileName = "wifiresults-" + std::to_string(fileSize) + "B-random" + (routing ? "" : "-nr") + ".txt";
+  fileName = "wifiresults-" + std::to_string(fileSize) + "B-1flow" + (routing ? "" : "-nr") + ".txt";
   std::cout << fileName << std::endl;
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
@@ -237,7 +237,7 @@ int main(int argc, char * argv[]) {
   for (int i = 0; i < numNodes - 2; i++) {
     x = r->GetValue(0, distance);
     y = r->GetValue(0, (double) distance / 10.0) + 70.0 - (double) distance / 20.0;
-    std::cout << "x - " << x << "y - " << y << std::endl;
+    std::cout << "x - " << x << " y - " << y << std::endl;
     positionAlloc->Add(Vector(x, y, 0.0));
   }
   positionAlloc->Add(Vector(distance, 70, 0.0));
@@ -272,7 +272,6 @@ int main(int argc, char * argv[]) {
   OnOffHelper onOff("ns3::UdpSocketFactory",
     InetSocketAddress(i.GetAddress(receiverNode), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
-  onOff.SetAttribute("PacketSize", UintegerValue(1472));
   ApplicationContainer sourceApps = onOff.Install(c.Get(senderNode));
   sourceApps.Start(Seconds((routing ? 0 : 20)));
   sourceApps.Stop(Seconds(10000.0));
