@@ -14,9 +14,9 @@ do
 	do
 		if [ "$runNum" -ne 30 ]
 		then
-			./wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize
+			./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize
 		else
-			./wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true
+			./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true
 		fi
 	done
 done
