@@ -83,7 +83,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
 
-static int fileSize = 10000;
+static int fileSize = 200;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -244,7 +244,7 @@ int main(int argc, char * argv[]) {
   mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
     "Mode", StringValue("Time"),
     "Time", StringValue("40s"),
-    "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.4]"),
+    "Speed", StringValue("ns3::UniformRandomVariable[Min=1|Max=15]"),
     "Bounds", StringValue("0|" + std::to_string(distance) + "|" + std::to_string(70.0 - (double) distance / 20.0) + "|" + std::to_string(70.0 + (double) distance / 20.0)));
   mobility.Install(c);
 

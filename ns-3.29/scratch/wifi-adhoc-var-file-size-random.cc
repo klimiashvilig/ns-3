@@ -312,7 +312,7 @@ int main(int argc, char * argv[]) {
   if (!routing)
     Simulator::Schedule(Seconds(20), & getInitialEnergy);
 
-  Simulator::Schedule(Seconds((routing ? 20 : 40)), & stop);
+  Simulator::Schedule(Seconds((routing ? 30 : 50)), & stop);
 
   Simulator::Run();
   Simulator::Destroy();

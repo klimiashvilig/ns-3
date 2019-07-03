@@ -298,7 +298,7 @@ int main(int argc, char * argv[]) {
   std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
   Config::ConnectWithoutContext(str, MakeCallback( & PacketSinkTraceSink));
 
-  Simulator::Schedule(Seconds(20), & stop);
+  Simulator::Schedule(Seconds(30), & stop);
 
   Simulator::Run();
   Simulator::Destroy();
