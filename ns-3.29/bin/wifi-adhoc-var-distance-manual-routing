@@ -5,15 +5,17 @@ cd ..
 writeInFile=true;
 fileSize=10000;
 
+./waf shell &
+
 for distance in {75..600..75}
 do
 	for runNum in {1..30}
 	do
 		if [ "$runNum" -ne 30 ]
 		then
-			./waf --run "wifi-adhoc-var-distance-manual-routing --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize"
+			./wifi-adhoc-var-distance-manual-routing --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize
 		else
-			./waf --run "wifi-adhoc-var-distance-manual-routing --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --endLine=true"
+			./wifi-adhoc-var-distance-manual-routing --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --endLine=true
 		fi
 	done
 done
