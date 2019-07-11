@@ -83,7 +83,7 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
 
-static int fileSize = 10000;
+static int fileSize = 200;
 static const double helloInterval = 0.5;
 static const double TCInterval = 1;
 static const int senderNode = 0;
@@ -91,7 +91,7 @@ static int receiverNode; // = numNodes - 1;
 std::ofstream myFile;
 Ptr < PacketSink > sink1;
 DeviceEnergyModelContainer deviceModels;
-bool routing = false;
+bool routing = true;
 bool writeInFile = false;
 
 std::string fileName = "wifiresults-" + std::to_string(fileSize) + "B-2-flows" + (routing ? "" : "-nr") + ".txt";
@@ -151,6 +151,7 @@ int main(int argc, char * argv[]) {
   int distance = 300;
   int runNum = 1;
   bool endLine = false;
+  int streamNumber = 1;
 
   CommandLine cmd;
   cmd.AddValue("distance", "Distance between source and sink", distance);
@@ -159,6 +160,7 @@ int main(int argc, char * argv[]) {
   cmd.AddValue("routing", "Whether routing has converged", routing);
   cmd.AddValue("fileSize", "File size", fileSize);
   cmd.AddValue("endLine", "Whether we want to end the line in the file", endLine);
+  cmd.AddValue("streamNumber", "Stream Number", streamNumber);
   cmd.Parse(argc, argv);
   
   std::cout << "Distance = " << distance << std::endl;
@@ -167,9 +169,7 @@ int main(int argc, char * argv[]) {
   std::cout << "routing = " << routing << std::endl;
   std::cout << "fileSize = " << fileSize << std::endl;
   std::cout << "endLine = " << endLine << std::endl;
-
-  RngSeedManager::SetSeed(1);
-  RngSeedManager::SetRun(runNum);
+  std::cout << "streamNumber = " << streamNumber << std::endl;
 
   int numNodes = (distance * distance / 10) / 500 + 3; // area = distance * distance / 10
   if (distance == 75)
@@ -232,6 +232,7 @@ int main(int argc, char * argv[]) {
   MobilityHelper mobility;
   Ptr < ListPositionAllocator > positionAlloc = CreateObject < ListPositionAllocator > ();
   Ptr < UniformRandomVariable > r = CreateObject < UniformRandomVariable > ();
+  r->SetAttribute ("Stream", IntegerValue (streamNumber));
   double x, y;
   positionAlloc->Add(Vector(0, 70, 0.0));
   for (int i = 0; i < numNodes - 2; i++) {
@@ -244,6 +245,9 @@ int main(int argc, char * argv[]) {
   mobility.SetPositionAllocator(positionAlloc);
   mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
   mobility.Install(c);
+
+  RngSeedManager::SetSeed(1);
+  RngSeedManager::SetRun(runNum);
 
   //ADD
   // Enable OLSR
@@ -305,10 +309,10 @@ int main(int argc, char * argv[]) {
   if (numNodes >= 4) {
     x = c.Get(senderNode + 1)->GetObject<MobilityModel>()->GetPosition().x;
     y = c.Get(senderNode + 1)->GetObject<MobilityModel>()->GetPosition().y;
-    std::cout << "Sender: " << "x - " << x << "y - " << y << std::endl;
+    std::cout << "Sender: " << "x - " << x << " y - " << y << std::endl;
     x = c.Get(receiverNode - 1)->GetObject<MobilityModel>()->GetPosition().x;
     y = c.Get(receiverNode - 1)->GetObject<MobilityModel>()->GetPosition().y;
-    std::cout << "Receiver: " << "x - " << x << "y - " << y << std::endl;
+    std::cout << "Receiver: " << "x - " << x << " y - " << y << std::endl;
     double secondFlowOffset;
     if (distance == 75)
       secondFlowOffset = r->GetValue(0, 0.5);
@@ -316,6 +320,7 @@ int main(int argc, char * argv[]) {
       secondFlowOffset = r->GetValue(1, 1.5);
     else
       secondFlowOffset = r->GetValue(2, 4);
+    std::cout << "secondFlowOffset = " << secondFlowOffset << std::endl;
     OnOffHelper secondFlowOnOff("ns3::UdpSocketFactory",
                      InetSocketAddress (i.GetAddress (receiverNode - 1), 9));
     secondFlowOnOff.SetConstantRate(DataRate("54Mbps"));
