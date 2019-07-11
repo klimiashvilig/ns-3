@@ -3,21 +3,24 @@
 cd ..
 
 writeInFile=true;
-routing=true;
-fileSize=200;
+routing=false;
+fileSize=10000;
 
 ./waf shell &
 
 for distance in {75..600..75}
 do
-	for runNum in {1..30}
+	for streamNumber in {1..10}
 	do
-		if [ "$runNum" -ne 30 ]
-		then
-			./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize
-		else
-			./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true
-		fi
+		for runNum in {1..5}
+		do
+			if [ "$runNum" -ne 5 ] || [ "$streamNumber" -ne 10 ]
+			then
+				./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --streamNumber=$streamNumber
+			else
+				./build/scratch/wifi-adhoc-var-distance-random --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true --streamNumber=$streamNumber
+			fi
+		done
 	done
 done
 
