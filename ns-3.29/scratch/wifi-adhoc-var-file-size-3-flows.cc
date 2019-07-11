@@ -92,7 +92,7 @@ static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
-bool routing = false;
+bool routing = true;
 bool writeInFile = false;
 
 std::string fileName = "wifiresults-" + std::to_string(distance) + "m-3flows" + (routing ? "" : "-nr") + ".txt";
@@ -149,9 +149,10 @@ PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
 }
 
 int main(int argc, char * argv[]) {
-  int fileSize = 200;
+  fileSize = 200;
   int runNum = 1;
   bool endLine = false;
+  int streamNumber = 1;
 
   CommandLine cmd;
   cmd.AddValue("distance", "Distance between source and sink", distance);
@@ -160,6 +161,7 @@ int main(int argc, char * argv[]) {
   cmd.AddValue("routing", "Whether routing has converged", routing);
   cmd.AddValue("fileSize", "File size", fileSize);
   cmd.AddValue("endLine", "Whether we want to end the line in the file", endLine);
+  cmd.AddValue("streamNumber", "Stream Number", streamNumber);
   cmd.Parse(argc, argv);
 
   std::cout << "Distance = " << distance << std::endl;
@@ -168,9 +170,7 @@ int main(int argc, char * argv[]) {
   std::cout << "routing = " << routing << std::endl;
   std::cout << "fileSize = " << fileSize << std::endl;
   std::cout << "endLine = " << endLine << std::endl;
-
-  RngSeedManager::SetSeed(1);
-  RngSeedManager::SetRun(runNum);
+  std::cout << "streamNumber = " << streamNumber << std::endl;
 
   int numNodes = (distance * distance / 10) / 500 + 3; // area = distance * distance / 10
   if (distance == 75)
@@ -232,6 +232,7 @@ int main(int argc, char * argv[]) {
   MobilityHelper mobility;
   Ptr < ListPositionAllocator > positionAlloc = CreateObject < ListPositionAllocator > ();
   Ptr < UniformRandomVariable > r = CreateObject < UniformRandomVariable > ();
+  r->SetAttribute ("Stream", IntegerValue (streamNumber));
   double x, y;
   positionAlloc->Add(Vector(0, 70, 0.0));
   for (int i = 0; i < numNodes - 2; i++) {
@@ -243,6 +244,9 @@ int main(int argc, char * argv[]) {
   mobility.SetPositionAllocator(positionAlloc);
   mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
   mobility.Install(c);
+
+  RngSeedManager::SetSeed(1);
+  RngSeedManager::SetRun(runNum);
 
   //ADD
   // Enable OLSR
