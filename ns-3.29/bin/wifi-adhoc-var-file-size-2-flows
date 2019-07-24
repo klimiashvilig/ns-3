@@ -4,7 +4,7 @@ cd ..
 
 writeInFile=true;
 routing=true;
-distance=75;
+distance=300;
 
 ./waf shell &
 

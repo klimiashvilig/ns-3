@@ -8,11 +8,11 @@ distance=300;
 
 ./waf shell &
 
-for fileSize in {100..10000..100}
+for fileSize in {512..20480..512}
 do
-	for runNum in {1..30}
+	for runNum in {31..60}
 	do
-		if [ "$runNum" -ne 30 ]
+		if [ "$runNum" -ne 60 ]
 		then
 			./build/scratch/wifi-adhoc-var-file-size --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize
 		else
