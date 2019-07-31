@@ -83,64 +83,50 @@ using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
 
-int distance = 75;
-static int fileSize;
-static const double helloInterval = 0.5;
-static const double TCInterval = 1;
+static const int distanceBetweenNodes = 75;
+static int fileSize = 10000;
 static const int senderNode = 0;
 static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
 Ptr<PacketSink> sink1;
 DeviceEnergyModelContainer deviceModels;
-bool routing = false;
 bool writeInFile = false;
 
-std::string fileName = "wifiresults-" + std::to_string(distance) + "m-1flow-with-mobility" + (routing ? "" : "-nr") + ".txt";
-
-double initialEnergy;
-
-void getInitialEnergy() {
-  initialEnergy = 0;
-  for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-    initialEnergy += ( * iter)->GetTotalEnergyConsumption();
-  }
-}
+std::string fileName = "wifiresults-" + std::to_string(fileSize) + "-B-with-interference.txt";
 
 void stop() {
   double energyConsumed = 0;
   for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-    energyConsumed += ( * iter)->GetTotalEnergyConsumption();
+    energyConsumed += (*iter)->GetTotalEnergyConsumption();
   }
-  if (!routing)
-    energyConsumed -= initialEnergy;
-  std::cout << "End of simulation (" << (Simulator::Now().GetSeconds() - (routing ? 0.0 : 20.0)) <<
+  std::cout << "End of simulation (" << Simulator::Now().GetSeconds() <<
     "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
   if (writeInFile) {
     if (!myFile.is_open()) {
       myFile.open(fileName, std::ofstream::app);
     }
-    myFile << (Simulator::Now().GetSeconds() - (routing ? 0.0 : 20.0)) << "," << energyConsumed << ",";
+    myFile << Simulator::Now().GetSeconds() << "," << energyConsumed << ",";
     myFile.close();
   }
   Simulator::Stop();
 }
 
 void
-PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
+PacketSinkTraceSink(Ptr <
+  const Packet > packet,
+    const Address & from) {
   if ((int) sink1->GetTotalRx() >= fileSize) {
     double energyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
-      energyConsumed += ( * iter)->GetTotalEnergyConsumption();
+      energyConsumed += (*iter)->GetTotalEnergyConsumption();
     }
-    if (!routing)
-      energyConsumed -= initialEnergy;
-    std::cout << "End of simulation (" << (Simulator::Now().GetSeconds() - (routing ? 0.0 : 20.0)) <<
+    std::cout << "End of simulation (" << Simulator::Now().GetSeconds() <<
       "s) Total energy consumed by radio = " << energyConsumed << "J" << std::endl;
     if (writeInFile) {
       if (!myFile.is_open()) {
         myFile.open(fileName, std::ofstream::app);
       }
-      myFile << (Simulator::Now().GetSeconds() - (routing ? 0.0 : 20.0)) << "," << energyConsumed << ",";
+      myFile << Simulator::Now().GetSeconds() << "," << energyConsumed << ",";
       myFile.close();
     }
     Simulator::Stop();
@@ -149,44 +135,46 @@ PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
 }
 
 int main(int argc, char * argv[]) {
-  fileSize = 200;
+  int distance = 300;
   int runNum = 1;
   bool endLine = false;
+  int streamNumber = 1;
 
   CommandLine cmd;
   cmd.AddValue("distance", "Distance between source and sink", distance);
   cmd.AddValue("runNum", "Run number", runNum);
   cmd.AddValue("writeInFile", "Whether we want to save output in a file", writeInFile);
-  cmd.AddValue("routing", "Whether routing has converged", routing);
   cmd.AddValue("fileSize", "File size", fileSize);
   cmd.AddValue("endLine", "Whether we want to end the line in the file", endLine);
+  cmd.AddValue("streamNumber", "Stream Number", streamNumber);
   cmd.Parse(argc, argv);
 
   std::cout << "Distance = " << distance << std::endl;
   std::cout << "runNum = " << runNum << std::endl;
   std::cout << "writeInFile = " << writeInFile << std::endl;
-  std::cout << "routing = " << routing << std::endl;
   std::cout << "fileSize = " << fileSize << std::endl;
   std::cout << "endLine = " << endLine << std::endl;
+  std::cout << "streamNumber = " << streamNumber << std::endl;
 
   RngSeedManager::SetSeed(1);
   RngSeedManager::SetRun(runNum);
 
-  int numNodes = (distance * distance / 10) / 500 + 3; // area = distance * distance / 10
+  int LinearNumNodes = distance / distanceBetweenNodes + 1;
+  int additionalNumNodes = (distance * distance / 10) / 500 + 3 - LinearNumNodes; // area = distance * distance / 10
   if (distance == 75)
-    numNodes = 6;
+    additionalNumNodes = 4;
   else if (distance == 150)
-    numNodes = 9;
-  receiverNode = numNodes - 1;
+    additionalNumNodes = 6;
+  receiverNode = LinearNumNodes - 1;
 
   std::string phyMode("ErpOfdmRate54Mbps");
 
-  fileName = "wifiresults-" + std::to_string(distance) + "m-1flow-with-mobility" + (routing ? "" : "-nr") + ".txt";
-
+  fileName = "wifiresults-" + std::to_string(fileSize) + "B-with-interference.txt";
+  std::cout << fileName << std::endl;
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
 
-  //LogComponentEnable ("AdhocWifiMac", LOG_LEVEL_ALL);
+  //LogComponentEnable ("RoutingProtocol", LOG_LEVEL_ALL);
 
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode",
@@ -195,7 +183,14 @@ int main(int argc, char * argv[]) {
     UintegerValue(200));
 
   NodeContainer c;
-  c.Create(numNodes);
+  c.Create(LinearNumNodes);
+  NodeContainer n[LinearNumNodes - 1];
+  for (int i = 0; i < LinearNumNodes - 1; i++) {
+    n[i] = NodeContainer(c.Get(i), c.Get(i + 1));
+  }
+
+  NodeContainer a;
+  a.Create(additionalNumNodes);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -225,58 +220,98 @@ int main(int argc, char * argv[]) {
     "ControlMode", StringValue(phyMode));
   // Set it to adhoc mode
   wifiMac.SetType("ns3::AdhocWifiMac");
+  NetDeviceContainer d[LinearNumNodes - 1];
+  for (int i = 0; i < LinearNumNodes - 1; i++) {
+    d[i] = wifi.Install(wifiPhy, wifiMac, n[i]);
+  }
   NetDeviceContainer devices = wifi.Install(wifiPhy, wifiMac, c);
+  NetDeviceContainer additionalDevices = wifi.Install(wifiPhy, wifiMac, a);
 
   // Note that with FixedRssLossModel, the positions below are not
   // used for received signal strength.
   MobilityHelper mobility;
-  Ptr < ListPositionAllocator > positionAlloc = CreateObject < ListPositionAllocator > ();
-  Ptr < UniformRandomVariable > r = CreateObject < UniformRandomVariable > ();
+  Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator>();
   double x, y;
-  positionAlloc->Add(Vector(0, 70, 0.0));
-  for (int i = 0; i < numNodes - 2; i++) {
-    x = r->GetValue(0, distance);
-    y = r->GetValue(0, (double) distance / 10.0) + 70.0 - (double) distance / 20.0;
+  for (int i = 0; i < LinearNumNodes; i++) {
+    x = i * distanceBetweenNodes;
+    y = 70;
     positionAlloc->Add(Vector(x, y, 0.0));
   }
-  positionAlloc->Add(Vector(distance, 70, 0.0));
   mobility.SetPositionAllocator(positionAlloc);
-  mobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel",
-    "Mode", StringValue("Time"),
-    "Time", StringValue("40s"),
-    "Speed", StringValue("ns3::ConstantRandomVariable[Constant=1.4]"),
-    "Bounds", StringValue("0|" + std::to_string(distance) + "|" + std::to_string(70.0 - (double) distance / 20.0) + "|" + std::to_string(70.0 + (double) distance / 20.0)));
+  mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
   mobility.Install(c);
 
-  //ADD
+  MobilityHelper mobility1;
+  Ptr<ListPositionAllocator> positionAlloc1 = CreateObject<ListPositionAllocator>();
+  Ptr<UniformRandomVariable> r = CreateObject<UniformRandomVariable>();
+  r->SetAttribute ("Stream", IntegerValue (streamNumber));
+  for (int i = 0; i < additionalNumNodes; i++) {
+    x = r->GetValue(0, distance);
+    y = r->GetValue(0, (double) distance / 10.0) + 70.0 - (double) distance / 20.0;
+    std::cout << "x - " << x << " y - " << y << std::endl;
+    positionAlloc1->Add(Vector(x, y, 0.0));
+  }
+  mobility1.SetPositionAllocator(positionAlloc1);
+  mobility1.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+  mobility1.Install(a);
+
+  RngSeedManager::SetSeed(1);
+  RngSeedManager::SetRun(runNum);
+
+  InternetStackHelper internet;
+  internet.Install(c);
+
   // Enable OLSR
   OlsrHelper olsr;
-  olsr.Set("HelloInterval", TimeValue(Seconds(helloInterval)));
-  olsr.Set("TcInterval", TimeValue(Seconds(TCInterval)));
-  Ipv4StaticRoutingHelper staticRouting;
+  olsr.Set("HelloInterval", TimeValue(Seconds(0.5)));
+  olsr.Set("TcInterval", TimeValue(Seconds(1)));
+  Ipv4StaticRoutingHelper staticRouting1;
 
   Ipv4ListRoutingHelper list;
-  list.Add(staticRouting, 0);
+  list.Add(staticRouting1, 0);
   list.Add(olsr, 10);
   //END
 
-  InternetStackHelper internet;
-  internet.SetRoutingHelper(list); /*ADD*/ // has effect on the next Install ()
-  internet.Install(c);
+  InternetStackHelper internet1;
+  internet1.SetRoutingHelper(list); /*ADD*/ // has effect on the next Install ()
+  internet1.Install(a);
 
-  //ADD
+  /*Ipv4AddressHelper aipv4;
+  NS_LOG_INFO("Assign IP Addresses.");
+  aipv4.SetBase("10.2.1.0", "255.255.255.1");
+  Ipv4InterfaceContainer ai = aipv4.Assign(additionalDevices);*/
 
   Ipv4AddressHelper ipv4;
+  Ipv4InterfaceContainer i[LinearNumNodes - 1];
   NS_LOG_INFO("Assign IP Addresses.");
-  ipv4.SetBase("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign(devices);
+  for (int j = 1; j < LinearNumNodes; j++) {
+    char ch[14] = "10.1.1.0";
+    if (j < 10)
+      ch[5] = '0' + j;
+    else {
+      for (int k = 12; k >= 6; k--) {
+        ch[k + 1] = ch[k];
+      }
+      ch[6] = '0' + (j % 10);
+      ch[5] = '0' + (j / 10);
+    }
+    ipv4.SetBase(ch, "255.255.255.0");
+    i[j - 1] = ipv4.Assign(d[j - 1]);
+  }
+
+  Ipv4StaticRoutingHelper ipv4RoutingHelper;
+  Ptr < Ipv4StaticRouting > staticRouting[LinearNumNodes - 1];
+  for (int j = 0; j < LinearNumNodes - 1; j++) {
+    staticRouting[j] = ipv4RoutingHelper.GetStaticRouting(c.Get(j)->GetObject < Ipv4 > ());
+    staticRouting[j]->AddHostRouteTo(i[LinearNumNodes - 2].GetAddress(1), i[j].GetAddress(1), 1);
+  }
 
   //---------------------------------------------------
   OnOffHelper onOff("ns3::UdpSocketFactory",
-    InetSocketAddress(i.GetAddress(receiverNode), 9));
+    InetSocketAddress(i[LinearNumNodes - 2].GetAddress(1), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
   ApplicationContainer sourceApps = onOff.Install(c.Get(senderNode));
-  sourceApps.Start(Seconds((routing ? 0 : 20)));
+  sourceApps.Start(Seconds(0));
   sourceApps.Stop(Seconds(10000.0));
 
   PacketSinkHelper sink("ns3::UdpSocketFactory",
@@ -284,7 +319,7 @@ int main(int argc, char * argv[]) {
 
   ApplicationContainer sinkApps = sink.Install(c.Get(receiverNode));
 
-  sinkApps.Start(Seconds((routing ? 0 : 20)));
+  sinkApps.Start(Seconds(0));
   sinkApps.Stop(Seconds(10000.0));
 
   //---------------------------------------------------
@@ -307,16 +342,12 @@ int main(int argc, char * argv[]) {
   /***************************************************************************/
 
   // Tracing
-
   sink1 = DynamicCast < PacketSink > (sinkApps.Get(0)); // get sink
 
   std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
   Config::ConnectWithoutContext(str, MakeCallback( & PacketSinkTraceSink));
 
-  if (!routing)
-    Simulator::Schedule(Seconds(20), & getInitialEnergy);
-
-  Simulator::Schedule(Seconds((routing ? 30 : 50)), & stop);
+  Simulator::Schedule(Seconds(30), & stop);
 
   Simulator::Run();
   Simulator::Destroy();

@@ -150,7 +150,7 @@ PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
 }
 
 int main(int argc, char * argv[]) {
-  int fileSize = 200;
+  fileSize = 200;
   int runNum = 1;
   bool endLine = false;
 

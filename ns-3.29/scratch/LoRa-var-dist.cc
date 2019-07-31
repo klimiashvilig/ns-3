@@ -68,13 +68,13 @@ using namespace ns3;
 
 int nEndDevices = 1;
 int nGatways = 1;
-static const int defaultDistance = 200;
-static int fileSize = 2302;
+static const int defaultDistance = 7000;
+static int fileSize = 10000;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
 bool writeInFile = false;
-bool variableDistance = false;
+bool variableDistance = true;
 
 DeviceEnergyModelContainer endDeviceModels;
 DeviceEnergyModelContainer gatewayModels;
@@ -99,11 +99,13 @@ int main (int argc, char *argv[])
     RngSeedManager::SetSeed (1);
     RngSeedManager::SetRun (1);
 
+    std::cout << "distance = " << distance << "m" << std::endl;
+
     // Mobility
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-    positionAlloc->Add (Vector (100, 100, 0.0));
-    positionAlloc->Add (Vector (10, 100, 0.0));
+    positionAlloc->Add (Vector (distance, 100, 0.0));
+    positionAlloc->Add (Vector (0, 100, 0.0));
     mobility.SetPositionAllocator (positionAlloc);
     mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
 

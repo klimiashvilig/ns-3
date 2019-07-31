@@ -263,6 +263,7 @@ int main(int argc, char * argv[]) {
   //---------------------------------------------------
   OnOffHelper onOff("ns3::UdpSocketFactory", InetSocketAddress(i.GetAddress(receiverNode), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
+  //onOff.SetAttribute ("PacketSize", UintegerValue (1472));
   ApplicationContainer sourceApps = onOff.Install(c.Get(senderNode));
   sourceApps.Start(Seconds((routing ? 0 : 20)));
   sourceApps.Stop(Seconds(10000.0));

@@ -111,10 +111,7 @@ void stop() {
   Simulator::Stop();
 }
 
-void
-PacketSinkTraceSink(Ptr <
-  const Packet > packet,
-    const Address & from) {
+void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
   if ((int) sink1->GetTotalRx() >= fileSize) {
     double energyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = deviceModels.Begin(); iter != deviceModels.End(); iter++) {
@@ -253,7 +250,7 @@ int main(int argc, char * argv[]) {
   Ipv4StaticRoutingHelper ipv4RoutingHelper;
   Ptr < Ipv4StaticRouting > staticRouting[numNodes - 1];
   for (int j = 0; j < numNodes - 1; j++) {
-    staticRouting[j] = ipv4RoutingHelper.GetStaticRouting(c.Get(j)->GetObject < Ipv4 > ());
+    staticRouting[j] = ipv4RoutingHelper.GetStaticRouting(c.Get(j)->GetObject<Ipv4>());
     staticRouting[j]->AddHostRouteTo(i[numNodes - 2].GetAddress(1), i[j].GetAddress(1), 1);
   }
 
@@ -293,7 +290,7 @@ int main(int argc, char * argv[]) {
   /***************************************************************************/
 
   // Tracing
-  sink1 = DynamicCast < PacketSink > (sinkApps.Get(0)); // get sink
+  sink1 = DynamicCast<PacketSink>(sinkApps.Get(0)); // get sink
 
   std::string str = "/NodeList/" + std::to_string(receiverNode) + "/ApplicationList/0/$ns3::PacketSink/Rx";
   Config::ConnectWithoutContext(str, MakeCallback( & PacketSinkTraceSink));

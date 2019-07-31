@@ -320,7 +320,7 @@ int main(int argc, char * argv[]) {
 
   Simulator::Run();
   Simulator::Destroy();
-  if (writeInFile) {
+  if (writeInFile && endLine) {
     if (!myFile.is_open()) {
       myFile.open(fileName, std::ofstream::app);
     }

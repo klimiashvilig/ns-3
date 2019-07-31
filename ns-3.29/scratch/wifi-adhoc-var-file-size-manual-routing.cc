@@ -136,7 +136,7 @@ PacketSinkTraceSink(Ptr <const Packet> packet, const Address & from) {
 }
 
 int main(int argc, char * argv[]) {
-  int fileSize = 200;
+  fileSize = 200;
   int runNum = 1;
   bool endLine = false;
 
@@ -162,7 +162,7 @@ int main(int argc, char * argv[]) {
 
   std::string phyMode("ErpOfdmRate54Mbps");
 
-  fileName = "wifiresults-" + std::to_string(fileSize) + "m-manual-routing.txt";
+  fileName = "wifiresults-" + std::to_string(distance) + "m-manual-routing.txt";
 
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
