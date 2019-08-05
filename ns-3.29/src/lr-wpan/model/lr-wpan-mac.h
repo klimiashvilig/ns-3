@@ -219,7 +219,7 @@ typedef Callback<void, McpsDataIndicationParams, Ptr<Packet> > McpsDataIndicatio
  *
  * Class that implements the LR-WPAN Mac state machine
  */
-class LrWpanMac : public Object
+class LrWpanMac : public Object, public LrWpanPhyListener
 {
 public:
   /**
@@ -255,48 +255,56 @@ public:
    */
   void SetRxOnWhenIdle (bool rxOnWhenIdle);
 
+
+  virtual void NotifyRx (void);
+  virtual void NotifyRxStart (void);
+  virtual void NotifyTx (void);
+  virtual void NotifyTxStart (void);
+  virtual void NotifySleep (void);
+  virtual void NotifyTransition (LrWpanPhyEnumeration);
+
   // XXX these setters will become obsolete if we use the attribute system
   /**
    * Set the short address of this MAC.
    *
    * \param address the new address
    */
-  void SetShortAddress (Mac16Address address);
+  virtual void SetShortAddress (Mac16Address address);
 
   /**
    * Get the short address of this MAC.
    *
    * \return the short address
    */
-  Mac16Address GetShortAddress (void) const;
+  virtual Mac16Address GetShortAddress (void) const;
 
   /**
    * Set the extended address of this MAC.
    *
    * \param address the new address
    */
-  void SetExtendedAddress (Mac64Address address);
+  virtual void SetExtendedAddress (Mac64Address address);
 
   /**
    * Get the extended address of this MAC.
    *
    * \return the extended address
    */
-  Mac64Address GetExtendedAddress (void) const;
+  virtual Mac64Address GetExtendedAddress (void) const;
 
   /**
    * Set the PAN id used by this MAC.
    *
    * \param panId the new PAN id.
    */
-  void SetPanId (uint16_t panId);
+  virtual void SetPanId (uint16_t panId);
 
   /**
    * Get the PAN id used by this MAC.
    *
    * \return the PAN id.
    */
-  uint16_t GetPanId (void) const;
+  virtual uint16_t GetPanId (void) const;
 
   /**
    *  IEEE 802.15.4-2006, section 7.1.1.1
@@ -306,28 +314,35 @@ public:
    *  \param params the request parameters
    *  \param p the packet to be transmitted
    */
-  void McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p);
+  virtual void McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p);
 
   /**
    * Set the CSMA/CA implementation to be used by the MAC.
    *
    * \param csmaCa the CSMA/CA implementation
    */
-  void SetCsmaCa (Ptr<LrWpanCsmaCa> csmaCa);
+  virtual void SetCsmaCa (Ptr<LrWpanCsmaCa> csmaCa);
+
+  /**
+   * Get the CSMA/CA implementation to be used by the MAC.
+   *
+   * \return the CSMA/CA implementation
+   */
+  virtual Ptr<LrWpanCsmaCa> GetCsmaCa (void);
 
   /**
    * Set the underlying PHY for the MAC.
    *
    * \param phy the PHY
    */
-  void SetPhy (Ptr<LrWpanPhy> phy);
+  virtual void SetPhy (Ptr<LrWpanPhy> phy);
 
   /**
    * Get the underlying PHY of the MAC.
    *
    * \return the PHY
    */
-  Ptr<LrWpanPhy> GetPhy (void);
+  virtual Ptr<LrWpanPhy> GetPhy (void);
 
   /**
    * Set the callback for the indication of an incoming data packet.
@@ -336,7 +351,7 @@ public:
    *
    * \param c the callback
    */
-  void SetMcpsDataIndicationCallback (McpsDataIndicationCallback c);
+  virtual void SetMcpsDataIndicationCallback (McpsDataIndicationCallback c);
 
   /**
    * Set the callback for the confirmation of a data transmission request.
@@ -345,7 +360,7 @@ public:
    *
    * \param c the callback
    */
-  void SetMcpsDataConfirmCallback (McpsDataConfirmCallback c);
+  virtual void SetMcpsDataConfirmCallback (McpsDataConfirmCallback c);
 
   // interfaces between MAC and PHY
   /**
@@ -356,7 +371,7 @@ public:
    *  @param p the packet to be transmitted
    *  @param lqi Link quality (LQI) value measured during reception of the PPDU
    */
-  void PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi);
+  virtual void PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi);
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.1.2
@@ -364,14 +379,14 @@ public:
    *  @param status to report to MAC
    *  PHY PD-DATA.confirm status
    */
-  void PdDataConfirm (LrWpanPhyEnumeration status);
+  virtual void PdDataConfirm (LrWpanPhyEnumeration status);
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.2
    *  PLME-CCA.confirm status
    *  @param status TRX_OFF, BUSY or IDLE
    */
-  void PlmeCcaConfirm (LrWpanPhyEnumeration status);
+  virtual void PlmeCcaConfirm (LrWpanPhyEnumeration status);
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.4
@@ -379,7 +394,7 @@ public:
    *  @param status SUCCESS, TRX_OFF or TX_ON
    *  @param energyLevel 0x00-0xff ED level for the channel
    */
-  void PlmeEdConfirm (LrWpanPhyEnumeration status, uint8_t energyLevel);
+  virtual void PlmeEdConfirm (LrWpanPhyEnumeration status, uint8_t energyLevel);
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.6
@@ -389,7 +404,7 @@ public:
    *  @param id the attributed identifier
    *  @param attribute the attribute value
    */
-  void PlmeGetAttributeConfirm (LrWpanPhyEnumeration status,
+  virtual void PlmeGetAttributeConfirm (LrWpanPhyEnumeration status,
                                 LrWpanPibAttributeIdentifier id,
                                 LrWpanPhyPibAttributes* attribute);
 
@@ -399,7 +414,7 @@ public:
    *  Set PHY state
    *  @param status in RX_ON,TRX_OFF,FORCE_TRX_OFF,TX_ON
    */
-  void PlmeSetTRXStateConfirm (LrWpanPhyEnumeration status);
+  virtual void PlmeSetTRXStateConfirm (LrWpanPhyEnumeration status);
 
   /**
    *  IEEE 802.15.4-2006 section 6.2.2.10
@@ -408,7 +423,7 @@ public:
    *  @param status SUCCESS, UNSUPPORTED_ATTRIBUTE, INVALID_PARAMETER, or READ_ONLY
    *  @param id the attributed identifier
    */
-  void PlmeSetAttributeConfirm (LrWpanPhyEnumeration status,
+  virtual void PlmeSetAttributeConfirm (LrWpanPhyEnumeration status,
                                 LrWpanPibAttributeIdentifier id);
 
   /**
@@ -423,14 +438,14 @@ public:
    *
    * \return current association status
    */
-  LrWpanAssociationStatus GetAssociationStatus (void) const;
+  virtual LrWpanAssociationStatus GetAssociationStatus (void) const;
 
   /**
    * Set the current association status.
    *
    * \param status new association status
    */
-  void SetAssociationStatus (LrWpanAssociationStatus status);
+  virtual void SetAssociationStatus (LrWpanAssociationStatus status);
 
   //MAC sublayer constants
   /**
@@ -509,6 +524,11 @@ public:
   uint8_t m_macMaxFrameRetries;
 
   /**
+   * The transmit queue capacity
+   */
+  uint32_t m_qMaxSize;
+
+  /**
    * Indication of whether the MAC sublayer is to enable its receiver during
    * idle periods.
    * See IEEE 802.15.4-2006, section 7.4.2, Table 86.
@@ -520,21 +540,21 @@ public:
    *
    * \return the maximum number symbols to wait for an acknowledgment frame
    */
-  uint64_t GetMacAckWaitDuration (void) const;
+  virtual uint64_t GetMacAckWaitDuration (void) const;
 
   /**
    * Get the macMaxFrameRetries attribute value.
    *
    * \return the maximum number of retries
    */
-  uint8_t GetMacMaxFrameRetries (void) const;
+  virtual uint8_t GetMacMaxFrameRetries (void) const;
 
   /**
    * Set the macMaxFrameRetries attribute value.
    *
    * \param retries the maximum number of retries
    */
-  void SetMacMaxFrameRetries (uint8_t retries);
+  virtual void SetMacMaxFrameRetries (uint8_t retries);
 
   /**
    * TracedCallback signature for sent packets.
@@ -563,7 +583,7 @@ protected:
   virtual void DoInitialize (void);
   virtual void DoDispose (void);
 
-private:
+//private:
   /**
    * Helper structure for managing transmission queue elements.
    */
@@ -611,8 +631,15 @@ private:
    * Check the transmission queue. If there are packets in the transmission
    * queue and the MAC is idle, pick the first one and initiate a packet
    * transmission.
+   *
+   * \return true, if the Queue is empty, false otherwise.
    */
-  void CheckQueue (void);
+  virtual bool CheckQueue (void);
+
+  /**
+   * The transmit queue current size.
+   */
+  uint32_t m_qSize;
 
   /**
    * The trace source fired when packets are considered as successfully sent

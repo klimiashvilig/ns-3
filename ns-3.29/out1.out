@@ -1,0 +1,96 @@
+Waf: Entering directory `/home/george/ns-allinone-3.29/ns-3.29/build'
+Waf: Leaving directory `/home/george/ns-allinone-3.29/ns-3.29/build'
+Build commands will be stored in build/compile_commands.json
+'build' finished successfully (15.800s)
+Distance = 75
+runNum = 1
+writeInFile = 0
+fileSize = 151
+endLine = 0
+802-15-4-results-151-B.txt
+0x1d97a10 state: 8 -> 8 at 0
+0x1d9b320 state: 8 -> 8 at 0
+Node0: 0x1d97a10
+Node1: 0x1d9b320
+0x1d97a10 state: 8 -> 6 at 0.000192
+0x1d9b320 state: 8 -> 6 at 0.000192
+0x1d9b320 state: 6 -> 9 at 0.00292
+0x1d9b320 state: 9 -> 2 at 0.00292
+0x1d97a10 state: 6 -> 1 at 0.00292025
+0x1d9b320 state: 2 -> 9 at 0.005192
+0x1d97a10 state: 1 -> 6 at 0.00519225
+0x1d9b320 state: 9 -> 6 at 0.005384
+0x1d97a10 state: 6 -> 9 at 0.007208
+0x1d97a10 state: 9 -> 2 at 0.007208
+0x1d9b320 state: 6 -> 1 at 0.00720825
+0x1d97a10 state: 2 -> 9 at 0.00948
+0x1d9b320 state: 1 -> 6 at 0.00948025
+0x1d97a10 state: 9 -> 6 at 0.009672
+0x1d9b320 state: 6 -> 9 at 0.0106
+0x1d9b320 state: 9 -> 2 at 0.0106
+0x1d97a10 state: 6 -> 1 at 0.0106003
+0x1d9b320 state: 2 -> 9 at 0.012872
+0x1d97a10 state: 1 -> 6 at 0.0128722
+0x1d9b320 state: 9 -> 6 at 0.013064
+0x1d97a10 state: 6 -> 9 at 0.013128
+0x1d97a10 state: 9 -> 2 at 0.013128
+0x1d9b320 state: 6 -> 1 at 0.0131282
+0x1d97a10 state: 2 -> 9 at 0.0154
+0x1d9b320 state: 1 -> 6 at 0.0154002
+0x1d97a10 state: 9 -> 6 at 0.015592
+0x1d97a10 state: 6 -> 9 at 0.016872
+0x1d97a10 state: 9 -> 2 at 0.016872
+0x1d9b320 state: 6 -> 1 at 0.0168722
+0x1d97a10 state: 2 -> 9 at 0.019304
+0x1d9b320 state: 1 -> 6 at 0.0193042
+0x1d97a10 state: 9 -> 6 at 0.019496
+0x1d9b320 state: 6 -> 9 at 0.0209042
+0x1d9b320 state: 9 -> 2 at 0.0209042
+0x1d97a10 state: 6 -> 1 at 0.0209045
+0x1d9b320 state: 2 -> 9 at 0.0236562
+0x1d97a10 state: 1 -> 6 at 0.0236565
+0x1d9b320 state: 9 -> 6 at 0.0238482
+0x1d97a10 state: 6 -> 9 at 0.0238485
+0x1d97a10 state: 9 -> 2 at 0.0238485
+0x1d9b320 state: 6 -> 1 at 0.0238487
+0x1d97a10 state: 2 -> 9 at 0.0242005
+0x1d9b320 state: 1 -> 6 at 0.0242007
+0x1d97a10 state: 9 -> 6 at 0.0243925
+0x1d97a10 state: 6 -> 9 at 0.0266325
+0x1d97a10 state: 9 -> 2 at 0.0266325
+0x1d9b320 state: 6 -> 1 at 0.0266327
+0x1d97a10 state: 2 -> 9 at 0.0308885
+Packet of size 75B received at 0.0308887s. Total size received 75
+Throughput = 19.4246kbps
+Throughput per hop = 19.4246kbps
+0x1d9b320 state: 1 -> 6 at 0.0308887
+0x1d97a10 state: 9 -> 6 at 0.0310805
+0x1d9b320 state: 6 -> 9 at 0.0310807
+0x1d9b320 state: 9 -> 2 at 0.0310807
+0x1d97a10 state: 6 -> 1 at 0.031081
+0x1d9b320 state: 2 -> 9 at 0.0314327
+0x1d97a10 state: 1 -> 6 at 0.031433
+0x1d9b320 state: 9 -> 6 at 0.0316247
+0x1d97a10 state: 6 -> 9 at 0.033993
+0x1d97a10 state: 9 -> 2 at 0.033993
+0x1d9b320 state: 6 -> 1 at 0.0339932
+0x1d97a10 state: 2 -> 9 at 0.038249
+Packet of size 75B received at 0.0382492s. Total size received 150
+Throughput = 31.3732kbps
+Throughput per hop = 31.3732kbps
+0x1d9b320 state: 1 -> 6 at 0.0382492
+0x1d97a10 state: 9 -> 6 at 0.038441
+0x1d9b320 state: 6 -> 9 at 0.0384412
+0x1d9b320 state: 9 -> 2 at 0.0384412
+0x1d97a10 state: 6 -> 1 at 0.0384415
+0x1d9b320 state: 2 -> 9 at 0.0387932
+0x1d97a10 state: 1 -> 6 at 0.0387935
+0x1d9b320 state: 9 -> 6 at 0.0389852
+0x1d97a10 state: 6 -> 9 at 0.0391135
+0x1d97a10 state: 9 -> 2 at 0.0391135
+0x1d9b320 state: 6 -> 1 at 0.0391137
+0x1d97a10 state: 2 -> 9 at 0.0433695
+Packet of size 75B received at 0.0433697s. Total size received 225
+Throughput = 41.5036kbps
+Throughput per hop = 41.5036kbps
+0x1d9b320 state: 1 -> 6 at 0.0433697

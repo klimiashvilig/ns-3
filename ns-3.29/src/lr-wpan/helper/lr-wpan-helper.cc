@@ -106,6 +106,9 @@ LrWpanHelper::EnableLogComponents (void)
   LogComponentEnable ("LrWpanErrorModel", LOG_LEVEL_ALL);
   LogComponentEnable ("LrWpanInterferenceHelper", LOG_LEVEL_ALL);
   LogComponentEnable ("LrWpanMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanNullMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanContikiMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanRadioEnergyModel", LOG_LEVEL_ALL);
   LogComponentEnable ("LrWpanNetDevice", LOG_LEVEL_ALL);
   LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
   LogComponentEnable ("LrWpanSpectrumSignalParameters", LOG_LEVEL_ALL);

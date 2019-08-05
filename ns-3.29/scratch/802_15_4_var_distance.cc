@@ -29,15 +29,17 @@ using namespace ns3;
 
 int packetsReceived = 0;
 Ptr<PacketSink> onOffSink1;
-int fileSize = 100000;
+int fileSize = 10;
 bool writeInFile = false;
 const int distanceBetweenNodes = 75;
 std::ofstream myFile;
 double numHops;
 
-std::string fileName = "802-15-4-results-" + std::to_string(fileSize) + "-B.txt";
+std::string fileName = "802-15-4-results-" + std::to_string(fileSize) + "B.txt";
 
 void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
+  std::cout << "lalalalala" << std::endl;
+  NS_LOG_UNCOND("asdasdasdsa");
   std::cout << "Packet of size " << packet->GetSize() << "B received at " 
   << Simulator::Now().GetSeconds() << "s. Total size received "
   << (int)onOffSink1->GetTotalRx() << std::endl;  
@@ -73,7 +75,7 @@ int main(int argc, char * argv[])
   int numNodes = distance / distanceBetweenNodes + 1;
   numHops = distance / distanceBetweenNodes;
 
-  std::string fileName = "802-15-4-results-" + std::to_string(fileSize) + "-B.txt";
+  std::string fileName = "802-15-4-results-" + std::to_string(fileSize) + "B.txt";
   std::cout << fileName << std::endl;
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);

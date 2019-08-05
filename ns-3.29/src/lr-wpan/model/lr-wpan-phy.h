@@ -241,6 +241,23 @@ typedef Callback< void, LrWpanPhyEnumeration,
 /**
  * \ingroup lr-wpan
  *
+ * A LrWpanPhy listener class for notifying listeners of LrWpan radio state change.
+ */
+class LrWpanPhyListener
+{
+public:
+  virtual ~LrWpanPhyListener () { }
+  virtual void NotifyRx (void) = 0;
+  virtual void NotifyRxStart (void) = 0;
+  virtual void NotifyTx (void) = 0;
+  virtual void NotifyTxStart (void) = 0;
+  virtual void NotifySleep (void) = 0;
+  virtual void NotifyTransition (LrWpanPhyEnumeration) = 0;
+};
+
+/**
+ * \ingroup lr-wpan
+ *
  * Make LrWpanPhy a SpectrumPhy so we can enable the eventual modeling of
  * device interference
  */
@@ -256,6 +273,11 @@ public:
   static TypeId GetTypeId (void);
 
   /**
+   * Get the current transceiver state.
+   */
+  LrWpanPhyEnumeration GetTRXState (void);
+
+  /**
    * The maximum packet size accepted by the PHY.
    * See Table 22 in section 6.4.1 of IEEE 802.15.4-2006
    */
@@ -269,10 +291,31 @@ public:
   static const uint32_t aTurnaroundTime;
 
   /**
+   * The time for switching the transceiver from OFF to ON or vice
+   * versa.
+   */
+  Time m_tRxTransitionTime;
+
+  /**
    * Default constructor.
    */
   LrWpanPhy (void);
   virtual ~LrWpanPhy (void);
+
+  /**
+   * Handle energy depletion event. Referenced by Energy Model.
+   */
+  void EnergyDepletionHandler (void);
+
+  /**
+   * Handle energy recharged event. Referenced by Energy Model.
+   */
+  void EnergyRechargedHandler (void);
+
+  /**
+   * Register a LrWpanPhyListener to be notified of Phy events.
+   */
+  void RegisterListener (LrWpanPhyListener *listener);
 
   // inherited from SpectrumPhy
   void SetMobility (Ptr<MobilityModel> m);
@@ -489,6 +532,22 @@ public:
   typedef void (* StateTracedCallback)
     (Time time, LrWpanPhyEnumeration oldState, LrWpanPhyEnumeration newState);
 
+  /**
+   * TracedCallback signature for end receive events.
+   *
+   * \param [in] packet The packet.
+   * \param [in] sinr The received SINR.
+   */
+  typedef void (* RxEndTracedCallback)
+    (const Ptr<const Packet> packet, const double sinr);
+    
+  /**
+   * \brief Gets the time for switching the transceiver between states (e.g., Tx to Rx).
+   *
+   * \returns The transition time.
+   */
+  Time GetTrxTransitionTime (void);
+
 protected:
   /**
    * The data and symbol rates for the different PHY options.
@@ -502,6 +561,13 @@ protected:
   static const LrWpanPhyPpduHeaderSymbolNumber ppduHeaderSymbolNumbers[7];
 
 private:
+
+  /** List of Phy Listeners. */
+  typedef std::list<LrWpanPhyListener *> ListenerList;
+  ListenerList m_listeners;         //!< List of listeners.
+
+  bool m_disabled;      //!< Energy depleted.
+
   /**
    * The second is true if the first is flagged as error/invalid.
    */
@@ -509,6 +575,36 @@ private:
 
   // Inherited from Object.
   virtual void DoDispose (void);
+
+  /**
+   * Call LrWpanPhyListener::NotifyRx on all listeners.
+   */
+  void NotifyListenersRx (void);
+
+  /**
+   * Call LrWpanPhyListener::NotifyRxStart on all listeners.
+   */
+  void NotifyListenersRxStart (void);
+
+  /**
+   * Call LrWpanPhyListener::NotifyTx on all listeners.
+   */
+  void NotifyListenersTx (void);
+
+  /**
+   * Call LrWpanPhyListener::NotifyTxStart on all listeners.
+   */
+  void NotifyListenersTxStart (void);
+
+  /** Call LrWpanPhyListener::NotifySleep on all listeners. */
+  void NotifyListenersSleep (void);
+
+  /**
+   * Call LrWpanPhyListener::NotifyTransition on all listeners.
+   *
+   * \param State Next State.
+   */
+  void NotifyListenersTransition (LrWpanPhyEnumeration newState);
 
   /**
    * Change the PHY state to the given new state, firing the state change trace.
@@ -558,7 +654,7 @@ private:
 
   /**
    * Cancel an ongoing ED procedure. This is called when the transceiver is
-   * switched off or set to TX mode. This calls the appropriate confirm callback
+   * switched off or set to TX mode. This calls the appropiate confirm callback
    * of the MAC.
    *
    * \param state the new state which is the cause for canceling ED
@@ -595,7 +691,6 @@ private:
   /**
    * Calculate the time required for sending the PPDU header, that is the
    * preamble, SFD and PHR.
-   * \returns The time required for sending the PPDU header.
    */
   Time GetPpduHeaderTxTime (void);
 
@@ -717,7 +812,7 @@ private:
   /**
    * The current transceiver state.
    */
-  TracedValue<LrWpanPhyEnumeration> m_trxState;
+  LrWpanPhyEnumeration m_trxState;  // TracedValue<LrWpanPhyEnumeration> m_trxState;
 
   /**
    * The next pending state to applied after the current action of the PHY is
