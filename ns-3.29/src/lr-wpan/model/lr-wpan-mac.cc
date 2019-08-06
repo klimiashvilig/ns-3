@@ -58,7 +58,7 @@ LrWpanMac::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxQueueSize", 
                    "If a packet arrives when queue at capacity, packet is dropped",
-                   UintegerValue (4),
+                   UintegerValue (40),
                    MakeUintegerAccessor (&LrWpanMac::m_qMaxSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddTraceSource ("MacTxEnqueue",
@@ -135,6 +135,7 @@ LrWpanMac::LrWpanMac ()
   m_lrWpanMacState = MAC_IDLE;
   ChangeMacState (MAC_IDLE);
 
+  m_macRxOnWhenIdle = true;
   m_qSize = 0;
   m_macPanId = 0;
   m_associationStatus = ASSOCIATED;
@@ -245,8 +246,9 @@ LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
 
   if (m_qSize == m_qMaxSize)
   {
+    //std::cout << "----------------------m_qSize = " << m_qSize << std::endl;
     NS_LOG_DEBUG ("The transmit queue is FULL. Packet dropped.");
-    return;
+    //return;
   }
 
   McpsDataConfirmParams confirmParams;

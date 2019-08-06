@@ -38,8 +38,6 @@ double numHops;
 std::string fileName = "802-15-4-results-" + std::to_string(fileSize) + "B.txt";
 
 void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
-  std::cout << "lalalalala" << std::endl;
-  NS_LOG_UNCOND("asdasdasdsa");
   std::cout << "Packet of size " << packet->GetSize() << "B received at " 
   << Simulator::Now().GetSeconds() << "s. Total size received "
   << (int)onOffSink1->GetTotalRx() << std::endl;  
@@ -70,7 +68,7 @@ int main(int argc, char * argv[])
   std::cout << "endLine = " << endLine << std::endl;
 
   LogComponentEnable ("LrWpanMac", LOG_LEVEL_ALL);
-  LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
+  //LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
 
   RngSeedManager::SetSeed(1);
   RngSeedManager::SetRun(runNum);
@@ -160,14 +158,14 @@ int main(int argc, char * argv[])
   onOff.SetConstantRate(DataRate("250kbps"));
   ApplicationContainer sourceApps = onOff.Install(c.Get(0));
   sourceApps.Start(Seconds(0));
-  sourceApps.Stop(Seconds(10000.0));
+  sourceApps.Stop(Seconds(1000.0));
 
   PacketSinkHelper onOffSink("ns3::UdpSocketFactory", Inet6SocketAddress(Ipv6Address::GetAny(), 4000));
 
   ApplicationContainer sinkApps = onOffSink.Install(c.Get(numNodes - 1));
 
   sinkApps.Start(Seconds(0));
-  sinkApps.Stop(Seconds(10000.0));
+  sinkApps.Stop(Seconds(1000.0));
 
   // Tracing
   onOffSink1 = DynamicCast<PacketSink>(sinkApps.Get(0)); // get sink
