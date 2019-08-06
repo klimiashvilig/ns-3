@@ -69,6 +69,9 @@ int main(int argc, char * argv[])
   std::cout << "fileSize = " << fileSize << std::endl;
   std::cout << "endLine = " << endLine << std::endl;
 
+  LogComponentEnable ("LrWpanMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
+
   RngSeedManager::SetSeed(1);
   RngSeedManager::SetRun(runNum);
 
