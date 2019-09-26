@@ -135,7 +135,7 @@ LrWpanMac::LrWpanMac ()
   m_lrWpanMacState = MAC_IDLE;
   ChangeMacState (MAC_IDLE);
 
-  m_macRxOnWhenIdle = true;
+  //m_macRxOnWhenIdle = true;
   m_qSize = 0;
   m_macPanId = 0;
   m_associationStatus = ASSOCIATED;
@@ -242,13 +242,13 @@ LrWpanMac::GetExtendedAddress () const
 void
 LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << p);
+  NS_LOG_FUNCTION (this << p << p->GetSize());
 
-  if (m_qSize == m_qMaxSize)
+  if (m_txQueue.size() == m_qMaxSize)
   {
-    //std::cout << "----------------------m_qSize = " << m_qSize << std::endl;
     NS_LOG_DEBUG ("The transmit queue is FULL. Packet dropped.");
-    //return;
+    //CheckQueue();
+    return;
   }
 
   McpsDataConfirmParams confirmParams;
@@ -351,6 +351,8 @@ LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
         {
           macHdr.SetAckReq ();
         }
+       else if (macHdr.GetDstAddrMode () == SHORT_ADDR && macHdr.GetShortDstAddr () == "ff:ff")
+          macHdr.SetNoAckReq ();
     }
   else if (b0 == 0)
     {
@@ -759,6 +761,7 @@ LrWpanMac::SendAck (uint8_t seqno)
 void
 LrWpanMac::RemoveFirstTxQElement ()
 {
+  NS_LOG_FUNCTION (this);
   TxQueueElement *txQElement = m_txQueue.front ();
   Ptr<const Packet> p = txQElement->txQPkt;
   m_numCsmacaRetry += m_csmaCa->GetNB () + 1;

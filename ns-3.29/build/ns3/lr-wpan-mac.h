@@ -431,7 +431,7 @@ public:
    *
    * \param macState indicate BUSY or IDLE channel condition
    */
-  void SetLrWpanMacState (LrWpanMacState macState);
+  virtual void SetLrWpanMacState (LrWpanMacState macState);
 
   /**
    * Get the current association status.
@@ -796,7 +796,7 @@ protected:
   /**
    * The current state of the MAC layer.
    */
-  TracedValue<LrWpanMacState> m_lrWpanMacState;
+  LrWpanMacState m_lrWpanMacState;//TracedValue<LrWpanMacState> m_lrWpanMacState;
 
   /**
    * The current association status of the MAC layer.

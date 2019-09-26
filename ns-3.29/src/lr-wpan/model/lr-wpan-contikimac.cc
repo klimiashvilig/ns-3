@@ -181,7 +181,7 @@ LrWpanContikiMac::NotifyPlm (Address address, Time txStart)
 void
 LrWpanContikiMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << p);
+  NS_LOG_FUNCTION (this << p << p->GetSize() << Simulator::Now());
 
   NS_ASSERT_MSG (!GetCsmaCa ()->IsSlottedCsmaCa (), "ContikiMAC cannot be used in slotted mode");
 
@@ -200,6 +200,11 @@ LrWpanContikiMac::CheckQueue ()
   NS_LOG_FUNCTION (this);
 
   // Pull a packet from the queue and start sending, if we are not already sending.
+  std::cout << "m_lrWpanMacState: " << m_lrWpanMacState << std::endl;
+  std::cout << "m_txQueue.empty(): " << m_txQueue.empty() << std::endl;
+  std::cout << "m_txPkt: " << m_txPkt << std::endl;
+  std::cout << "m_setMacState.IsRunning (): " << m_setMacState.IsRunning () << std::endl;
+  std::cout << "m_qSize: " << m_qSize << std::endl;
   if (m_lrWpanMacState == MAC_IDLE && !m_txQueue.empty () && m_txPkt == 0 && !m_setMacState.IsRunning ())
     {
       TxQueueElement *txQElement = m_txQueue.front ();
@@ -239,17 +244,16 @@ LrWpanContikiMac::CheckQueue ()
         }
       return false;
     }
-
   return true;
 }
 
 void
 LrWpanContikiMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
 {
-  NS_ASSERT (m_lrWpanMacState == MAC_IDLE || m_lrWpanMacState == MAC_ACK_PENDING || m_lrWpanMacState == MAC_CSMA);
-
   NS_LOG_FUNCTION (this << psduLength << p << lqi);
 
+  NS_ASSERT (m_lrWpanMacState == MAC_IDLE || m_lrWpanMacState == MAC_ACK_PENDING || m_lrWpanMacState == MAC_CSMA);
+ 
   bool acceptFrame;
 
   // from sec 7.5.6.2 Reception and rejection, Std802.15.4-2006
@@ -279,6 +283,7 @@ LrWpanContikiMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t 
   if (!receivedMacTrailer.CheckFcs (p))
     {
       m_macRxDropTrace (originalPkt);
+      NS_LOG_DEBUG ("Level 1: filtered");
     }
   else
     {
@@ -308,6 +313,7 @@ LrWpanContikiMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t 
       if (m_macPromiscuousMode)
         {
           //level 2 filtering
+          NS_LOG_DEBUG ("Level 2: filtered");
           if (!m_mcpsDataIndicationCallback.IsNull ())
             {
               NS_LOG_DEBUG ("promiscuous mode, forwarding up");
@@ -499,11 +505,11 @@ LrWpanContikiMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t 
 }
 
 void
-LrWpanContikiMac::PktRetransmissionTimeout (void)
+LrWpanContikiMac::PktRetransmissionTimeout (bool broadcast)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << Simulator::Now());
 
-  if (m_broadcast)
+  if (broadcast)
     {
       NS_ASSERT (m_lrWpanMacState == MAC_SENDING && m_phy->GetTRXState () == IEEE_802_15_4_PHY_TX_ON);
       NS_LOG_DEBUG("Broadcasting...");
@@ -513,7 +519,8 @@ LrWpanContikiMac::PktRetransmissionTimeout (void)
     }    
 
   if (m_rdcRetries < m_rdcMaxFrameRetries)
-    {   
+    {
+      NS_LOG_DEBUG("Retransmitting packet #" << (int)m_rdcRetries);   
       m_rdcRetries++;
       ChangeMacState (MAC_SENDING);
       m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TX_ON);
@@ -541,7 +548,10 @@ LrWpanContikiMac::PdDataConfirm (LrWpanPhyEnumeration status)
         {
           // We have just send a regular data packet, check if we have to wait
           // for an ACK.
-          if (macHdr.IsAckReq ())
+          // std::cout << "Ack req = " << macHdr.IsAckReq() << std::endl;
+          // std::cout << Simulator::Now().GetSeconds() << "s\n";
+          // std::cout << "broadcast = " << m_broadcast << std::endl;
+          if (macHdr.IsAckReq ())// && !m_broadcast)
             {
               //No ackWaitTimeout, RDC informs MAC about failure (No ACK)
               m_setMacState.Cancel ();
@@ -549,14 +559,16 @@ LrWpanContikiMac::PdDataConfirm (LrWpanPhyEnumeration status)
 
               //ContikiMAC: data packet transmissions are repeated
               NS_ASSERT (m_repeatPkt.IsExpired ());
-              m_repeatPkt = Simulator::Schedule (m_pktInterval, &LrWpanContikiMac::PktRetransmissionTimeout, this);
+              NS_LOG_DEBUG("PktRetransmissionTimeout scheduled at " << Simulator::Now() << " for " << Simulator::Now() + m_pktInterval);
+              m_repeatPkt = Simulator::Schedule (m_pktInterval, &LrWpanContikiMac::PktRetransmissionTimeout, this, false);
 
               return;
             }
           else if (m_broadcast && ((Simulator::Now () - m_bcStart) < Seconds (m_sleepTime)))
             {
               NS_ASSERT (m_repeatPkt.IsExpired ());
-              m_repeatPkt = Simulator::Schedule (m_pktInterval, &LrWpanContikiMac::PktRetransmissionTimeout, this);
+              NS_LOG_DEBUG("PktRetransmissionTimeout *broadcast* scheduled at " << Simulator::Now() << " for " << Simulator::Now() + m_pktInterval);
+              m_repeatPkt = Simulator::Schedule (m_pktInterval, &LrWpanContikiMac::PktRetransmissionTimeout, this, true);
             } 
           else
             {
@@ -626,7 +638,7 @@ LrWpanContikiMac::PdDataConfirm (LrWpanPhyEnumeration status)
 void
 LrWpanContikiMac::PlmeCcaConfirm (LrWpanPhyEnumeration status)
 {
-  NS_LOG_FUNCTION (this << status);
+  NS_LOG_FUNCTION (this << status << Simulator::Now());
 
   if (m_lrWpanMacState == MAC_IDLE)
     {
@@ -672,38 +684,38 @@ LrWpanContikiMac::PlmeSetTRXStateConfirm (LrWpanPhyEnumeration status)
 {
   NS_LOG_FUNCTION (this << status);
   if (status == IEEE_802_15_4_PHY_SUCCESS)      //state change
-    {          
-      if (m_wakeUp.IsRunning ())        //If woke up to send packet, cancel pending wakeup
-        {
-          NS_ASSERT (m_phy->GetTRXState () == IEEE_802_15_4_PHY_TX_ON || m_phy->GetTRXState () == IEEE_802_15_4_PHY_RX_ON);
-          NS_LOG_DEBUG("WakeUp Cancelled");
-          m_wakeUp.Cancel ();
-        }
+  {          
+    if (m_wakeUp.IsRunning ())        //If woke up to send packet, cancel pending wakeup
+    {
+      NS_ASSERT (m_phy->GetTRXState () == IEEE_802_15_4_PHY_TX_ON || m_phy->GetTRXState () == IEEE_802_15_4_PHY_RX_ON);
+      NS_LOG_DEBUG("WakeUp Cancelled");
+      m_wakeUp.Cancel ();
     }
+  }
     
   if (m_lrWpanMacState == MAC_SENDING && (status == IEEE_802_15_4_PHY_TX_ON || status == IEEE_802_15_4_PHY_SUCCESS))
-    {
-      NS_ASSERT (m_txPkt);
+  {
+    NS_ASSERT (m_txPkt);
 
-      if (m_broadcast)
-        {
-          NS_LOG_DEBUG("Starting broadcast now");
-          m_bcStart = Simulator::Now ();
-        }
-      else 
-        {
-          NS_LOG_DEBUG("Starting pkt tx now");
-	  if (m_currentTxStart != Seconds (0))
-            {
-              m_pastTxStart = m_currentTxStart;
-              m_currentTxStart = Simulator::Now ();
+    if (m_broadcast)
+    {
+      NS_LOG_DEBUG("Starting broadcast now");
+      m_bcStart = Simulator::Now ();
+    }
+    else 
+    {
+      NS_LOG_DEBUG("Starting pkt tx now");
+      if (m_currentTxStart != Seconds (0))
+      {
+        m_pastTxStart = m_currentTxStart;
+        m_currentTxStart = Simulator::Now ();
 	    }
-	  else 
+	    else 
 	    {
 	      m_currentTxStart = Simulator::Now ();
-            }
-        }
+      }
     }
+  }
   else if (m_lrWpanMacState == MAC_IDLE)
     {
       NS_ASSERT (status == IEEE_802_15_4_PHY_RX_ON || status == IEEE_802_15_4_PHY_SUCCESS || status == IEEE_802_15_4_PHY_TRX_OFF);

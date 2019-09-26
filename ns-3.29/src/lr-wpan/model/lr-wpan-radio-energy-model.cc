@@ -187,17 +187,22 @@ LrWpanRadioEnergyModel::ChangeState (int newState)
   switch (m_currentState)
     {
     case IEEE_802_15_4_PHY_TX_ON:
+      //std::cout << "IEEE_802_15_4_PHY_TX_ON" << std::endl;
       energyToDecrease = duration.GetSeconds () * m_txCurrentA * supplyVoltage;
       break;
     case IEEE_802_15_4_PHY_RX_ON:
+      //std::cout << "IEEE_802_15_4_PHY_RX_ON" << std::endl;
       energyToDecrease = duration.GetSeconds () * m_rxCurrentA * supplyVoltage;
       break;
     case IEEE_802_15_4_PHY_TRX_OFF:
+      //std::cout << "IEEE_802_15_4_PHY_TRX_OFF at " << Simulator::Now().GetSeconds() << std::endl;
       energyToDecrease = duration.GetSeconds () * m_sleepCurrentA * supplyVoltage;
       break;
     // \todo use a better algorithm to guess the energy in this state
     case IEEE_802_15_4_PHY_UNSPECIFIED:
+      //std::cout << "IEEE_802_15_4_PHY_UNSPECIFIED" << std::endl;
       energyToDecrease = duration.GetSeconds () * DoGetCurrentA() * supplyVoltage;      //TRANSITION duration * current * supplyVoltage
+      //std::cout << DoGetCurrentA() << std::endl;
       break;
     default:
       NS_FATAL_ERROR ("LrWpanRadioEnergyModel:Undefined radio state: " << m_currentState);

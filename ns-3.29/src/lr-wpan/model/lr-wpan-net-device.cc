@@ -385,6 +385,7 @@ LrWpanNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protoco
     }
 
   McpsDataRequestParams m_mcpsDataRequestParams;
+  // std::cout << "Destination address: " << dest << " packet size: " << packet->GetSize() << std::endl;
   m_mcpsDataRequestParams.m_dstAddr = Mac16Address::ConvertFrom (dest);
   m_mcpsDataRequestParams.m_dstAddrMode = SHORT_ADDR;
   m_mcpsDataRequestParams.m_dstPanId = m_mac->GetPanId ();

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeInFile=false;
+routing=true;
+fileSize=200;
+packetSize=75;
+maxRetries=30;
+ccaInterval=0.0006;
+pktInterval=0.00055;
+
+./waf shell &
+
+for distance in {150..150..75}
+do
+	for runNum in {1..30}
+	do
+		if [ "$runNum" -ne 30 ]
+		then
+			./build/scratch/contikimac-var-distance --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --maxRetries=$maxRetries --ccaInterval=$ccaInterval --pktInterval=$pktInterval
+		else
+			./build/scratch/contikimac-var-distance --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --maxRetries=$maxRetries --ccaInterval=$ccaInterval --pktInterval=$pktInterval --endLine=true
+		fi
+	done
+done
+
+
+

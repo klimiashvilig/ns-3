@@ -107,7 +107,7 @@ LrWpanRadioEnergyModelHelper::DoInstall (Ptr<NetDevice> device,
   Ptr<LrWpanNetDevice> lrWpanDevice = DynamicCast<LrWpanNetDevice> (device);
   Ptr<LrWpanPhy> lrWpanPhy = lrWpanDevice->GetPhy ();
   // create and register energy model phy listener
-  LrWpanPhy->RegisterListener (model->GetPhyListener ());
+  //LrWpanPhy->RegisterListener (model->GetPhyListener ());
   return model;
 }
 

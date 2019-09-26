@@ -139,7 +139,7 @@ private:
   /**
    * Handle an RDC ACK timeout.
    */
-  void PktRetransmissionTimeout (void);
+  void PktRetransmissionTimeout (bool broadcast);
 
   /**
    * Check the transmission queue. If there are packets in the transmission

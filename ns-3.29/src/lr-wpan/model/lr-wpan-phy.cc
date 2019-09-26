@@ -304,7 +304,6 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
               m_ccaPeakPower = power;
             }
         }
-
       Simulator::Schedule (spectrumRxParams->duration, &LrWpanPhy::EndRx, this, spectrumRxParams);
       return;
     }
@@ -313,6 +312,7 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
   NS_ASSERT (p != 0);
 
   // Prevent PHY from receiving another packet while switching the transceiver state.
+  // std::cout << "m_trxState = " << m_trxState << " m_setTRXState.IsRunning() = " << m_setTRXState.IsRunning() << std::endl;
   if (m_trxState == IEEE_802_15_4_PHY_RX_ON && !m_setTRXState.IsRunning ())
     {
       // The specification doesn't seem to refer to BUSY_RX, but vendor
@@ -390,13 +390,13 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
 
   // Always call EndRx to update the interference.
   // \todo: Do we need to keep track of these events to unschedule them when disposing off the PHY?
-
   Simulator::Schedule (spectrumRxParams->duration, &LrWpanPhy::EndRx, this, spectrumRxParams);
 }
 
 void
 LrWpanPhy::CheckInterference (void)
 {
+  NS_LOG_FUNCTION(this);
   // Calculate whether packet was lost.
   LrWpanSpectrumValueHelper psdHelper;
   Ptr<LrWpanSpectrumSignalParameters> currentRxParams = m_currentRxPacket.first;
@@ -405,7 +405,8 @@ LrWpanPhy::CheckInterference (void)
   if (m_trxState == IEEE_802_15_4_PHY_BUSY_RX)
     {
       // NS_ASSERT (currentRxParams && !m_currentRxPacket.second);
-
+      if (!currentRxParams)
+        return;
       Ptr<Packet> currentPacket = currentRxParams->packetBurst->GetPackets ().front ();
       if (m_errorModel != 0)
         {
@@ -443,7 +444,7 @@ LrWpanPhy::CheckInterference (void)
 void
 LrWpanPhy::EndRx (Ptr<SpectrumSignalParameters> par)
 {
-  NS_LOG_FUNCTION (this);
+  NS_LOG_FUNCTION (this << Simulator::Now());
 
   Ptr<LrWpanSpectrumSignalParameters> params = DynamicCast<LrWpanSpectrumSignalParameters> (par);
 
@@ -560,6 +561,7 @@ LrWpanPhy::PdDataRequest (const uint32_t psduLength, Ptr<Packet> p)
           pb->AddPacket (p);
           txParams->packetBurst = pb;
           m_channel->StartTx (txParams);
+          // std::cout << this << " " << p->GetSize() << "B -- EndTx in " << txParams->duration << " at " << (Simulator::Now() + txParams->duration) << std::endl;
           m_pdDataRequest = Simulator::Schedule (txParams->duration, &LrWpanPhy::EndTx, this);
           ChangeTrxState (IEEE_802_15_4_PHY_BUSY_TX);
           return;
@@ -772,6 +774,7 @@ LrWpanPhy::PlmeSetTRXStateRequest (LrWpanPhyEnumeration state)
               //incomplete reception -- force packet discard
               NS_LOG_DEBUG ("force TX_ON, terminate reception");
               m_currentRxPacket.second = true;
+              m_currentRxPacket.first = 0;
             }
 
           // If CCA is in progress, cancel CCA and return BUSY.
@@ -1054,7 +1057,7 @@ LrWpanPhy::SetPlmeSetAttributeConfirmCallback (PlmeSetAttributeConfirmCallback c
 void
 LrWpanPhy::ChangeTrxState (LrWpanPhyEnumeration newState)
 {
-  NS_LOG_LOGIC (this << " state: " << m_trxState << " -> " << newState);
+  NS_LOG_UNCOND (this << " state: " << m_trxState << " -> " << newState);
   m_trxStateLogger (Simulator::Now (), m_trxState, newState);
   m_trxState = newState;
 
@@ -1149,26 +1152,34 @@ LrWpanPhy::EndCca (void)
     {
       m_ccaPeakPower = power;
     }
+  
+  NS_LOG_DEBUG ("m_ccaPeakPower = " << m_ccaPeakPower);
+  NS_LOG_DEBUG ("m_rxSensitivity = " << m_rxSensitivity);
 
   if (PhyIsBusy ())
     {
+      NS_LOG_DEBUG ("Phy Is Busy");
       sensedChannelState = IEEE_802_15_4_PHY_BUSY;
     }
   else if (m_phyPIBAttributes.phyCCAMode == 1)
     { //sec 6.9.9 ED detection
       // -- ED threshold at most 10 dB above receiver sensitivity.
+      NS_LOG_DEBUG ("phyCCAMode = 1");
       if (10 * log10 (m_ccaPeakPower / m_rxSensitivity) >= 10.0)
         {
+          NS_LOG_UNCOND ("BUSY for phyCCAMode = 1");
           sensedChannelState = IEEE_802_15_4_PHY_BUSY;
         }
       else
         {
+          NS_LOG_DEBUG ("IDLE for phyCCAMode = 1");
           sensedChannelState = IEEE_802_15_4_PHY_IDLE;
         }
     }
   else if (m_phyPIBAttributes.phyCCAMode == 2)
     {
       //sec 6.9.9 carrier sense only
+      NS_LOG_DEBUG ("phyCCAMode = 2");
       if (m_trxState == IEEE_802_15_4_PHY_BUSY_RX)
         {
           // We currently do not model PPDU reception in detail. Instead we model
@@ -1185,6 +1196,7 @@ LrWpanPhy::EndCca (void)
     }
   else if (m_phyPIBAttributes.phyCCAMode == 3)
     { //sect 6.9.9 both
+      NS_LOG_DEBUG ("phyCCAMode = 3");
       if ((10 * log10 (m_ccaPeakPower / m_rxSensitivity) >= 10.0)
           && m_trxState == IEEE_802_15_4_PHY_BUSY_RX)
         {
@@ -1231,8 +1243,7 @@ LrWpanPhy::EndSetTRXState (void)
 void
 LrWpanPhy::EndTx (void)
 {
-  NS_LOG_FUNCTION (this);
-
+  NS_LOG_FUNCTION (this << Simulator::Now());
   NS_ABORT_IF ( (m_trxState != IEEE_802_15_4_PHY_BUSY_TX) && (m_trxState != IEEE_802_15_4_PHY_TRX_OFF));
 
   if (m_currentTxPacket.second == false)

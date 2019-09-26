@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeInFile=true;
+fileSize=10000;
+packetSize=75;
+distance=75;
+varDistance=false;
+
+./waf shell &
+
+if [ "$varDistance" -eq true ]
+then
+	for distance in {75..600..75}
+	do
+		for runNum in {1..30}
+		do
+			if [ "$runNum" -ne 30 ]
+			then
+				./build/scratch/802-15-4 --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --varDistance=$varDistance
+			else
+				./build/scratch/802-15-4 --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --varDistance=$varDistance --endLine=true
+			fi
+		done
+	done
+else
+	for fileSize in {512..20480..512}
+	do
+		for runNum in {1..30}
+		do
+			if [ "$runNum" -ne 30 ]
+			then
+				./build/scratch/802-15-4 --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --varDistance=$varDistance
+			else
+				./build/scratch/802-15-4 --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --varDistance=$varDistance --endLine=true
+			fi
+		done
+	done
+fi
+
+
