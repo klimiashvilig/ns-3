@@ -311,6 +311,8 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
   Ptr<Packet> p = (lrWpanRxParams->packetBurst->GetPackets ()).front ();
   NS_ASSERT (p != 0);
 
+  if (m_trxState == IEEE_802_15_4_PHY_TRX_OFF)
+    ChangeTrxState(IEEE_802_15_4_PHY_RX_ON);
   // Prevent PHY from receiving another packet while switching the transceiver state.
   // std::cout << "m_trxState = " << m_trxState << " m_setTRXState.IsRunning() = " << m_setTRXState.IsRunning() << std::endl;
   if (m_trxState == IEEE_802_15_4_PHY_RX_ON && !m_setTRXState.IsRunning ())
@@ -1057,7 +1059,8 @@ LrWpanPhy::SetPlmeSetAttributeConfirmCallback (PlmeSetAttributeConfirmCallback c
 void
 LrWpanPhy::ChangeTrxState (LrWpanPhyEnumeration newState)
 {
-  NS_LOG_UNCOND (this << " state: " << m_trxState << " -> " << newState);
+  std::cout << this << " state: " << m_trxState << " -> " << newState << std::endl;
+  NS_LOG_DEBUG (this << " state: " << m_trxState << " -> " << newState);
   m_trxStateLogger (Simulator::Now (), m_trxState, newState);
   m_trxState = newState;
 

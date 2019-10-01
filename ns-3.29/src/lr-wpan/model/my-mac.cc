@@ -86,11 +86,14 @@ MyMac::Sleep ()
   if (m_lrWpanMacState == MAC_IDLE
       && (m_phy->GetTRXState () == IEEE_802_15_4_PHY_RX_ON || m_phy->GetTRXState () == IEEE_802_15_4_PHY_TX_ON))   //MAC_IDLE and TRX_ON
   {
+    std::cout << m_phy << "Sleeping..." << std::endl;
     NS_LOG_DEBUG("Sleeping...");
     m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TRX_OFF);
   }
-  else
+  else {
+    std::cout << m_phy << "Could not switch to sleep" << std::endl;
     NS_LOG_DEBUG("Could not switch to sleep");
+  }
 }
 
 void
@@ -101,7 +104,7 @@ MyMac::WakeUp ()
   if (m_phy->GetTRXState () == IEEE_802_15_4_PHY_TRX_OFF)
   {
     NS_LOG_INFO("Waking up!");
-    m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_RX_ON);
+    m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TX_ON);
   }
   else
     NS_LOG_INFO("Radio is already awake!");
@@ -146,9 +149,9 @@ MyMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
   LrWpanMacTrailer receivedMacTrailer;
   p->RemoveTrailer (receivedMacTrailer);
   if (Node::ChecksumEnabled ())
-    {
-      receivedMacTrailer.EnableFcs (true);
-    }
+  {
+    receivedMacTrailer.EnableFcs (true);
+  }
 
   // level 1 filtering
   if (!receivedMacTrailer.CheckFcs (p))
@@ -254,7 +257,7 @@ MyMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
       }
 
       if (acceptFrame)
-        {
+      {
         m_macRxTrace (originalPkt);
         // \todo: What should we do if we receive a frame while waiting for an ACK?
         //        Especially if this frame has the ACK request bit set, should we reply with an ACK, possibly missing the pending ACK?
@@ -264,52 +267,53 @@ MyMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
         if ((receivedMacHdr.IsData () || receivedMacHdr.IsCommand ()) && receivedMacHdr.IsAckReq ()
           && !(receivedMacHdr.GetDstAddrMode () == SHORT_ADDR && receivedMacHdr.GetShortDstAddr () == "ff:ff"))
         {
-        // If this is a data or mac command frame, which is not a broadcast,
-        // with ack req set, generate and send an ack frame.
-        // If there is a CSMA medium access in progress we cancel the medium access
-        // for sending the ACK frame. A new transmission attempt will be started
-        // after the ACK was send.
-        if (m_lrWpanMacState == MAC_ACK_PENDING)
-        {
-          m_ackWaitTimeout.Cancel ();
-          PrepareRetransmission ();
-        }
-        else if (m_lrWpanMacState == MAC_CSMA)
-        {
-          // \todo: If we receive a packet while doing CSMA/CA, should  we drop the packet because of channel busy,
-          //        or should we restart CSMA/CA for the packet after sending the ACK?
-          // Currently we simply restart CSMA/CA after sending the ACK.
-          m_csmaCa->Cancel ();
-        }
-        // Cancel any pending MAC state change, ACKs have higher priority.
-        m_setMacState.Cancel ();
-        ChangeMacState (MAC_IDLE);
-        m_setMacState = Simulator::ScheduleNow (&MyMac::SendAck, this, receivedMacHdr.GetSeqNum ());
-      }
-      if (receivedMacHdr.IsData () && !m_mcpsDataIndicationCallback.IsNull ())
-      {
-        // If it is a data frame, push it up the stack.
-        NS_LOG_DEBUG ("PdDataIndication():  Packet is for me; forwarding up");
-        m_mcpsDataIndicationCallback (params, p);
-      }
-      else if (receivedMacHdr.IsAcknowledgment () && m_txPkt && m_lrWpanMacState == MAC_ACK_PENDING)
-      {
-        NS_LOG_DEBUG("Acked");
-        LrWpanMacHeader macHdr;
-        m_txPkt->PeekHeader (macHdr);
-        if (receivedMacHdr.GetSeqNum () == macHdr.GetSeqNum ())
-        {
-          m_macTxOkTrace (m_txPkt);
-          // If it is an ACK with the expected sequence number, finish the transmission
-          // and notify the upper layer.
-          m_ackWaitTimeout.Cancel ();
-          if (!m_mcpsDataConfirmCallback.IsNull ())
+          // If this is a data or mac command frame, which is not a broadcast,
+          // with ack req set, generate and send an ack frame.
+          // If there is a CSMA medium access in progress we cancel the medium access
+          // for sending the ACK frame. A new transmission attempt will be started
+          // after the ACK was send.
+          if (m_lrWpanMacState == MAC_ACK_PENDING)
           {
-            TxQueueElement *txQElement = m_txQueue.front ();
-            McpsDataConfirmParams confirmParams;
-            confirmParams.m_msduHandle = txQElement->txQMsduHandle;
-            confirmParams.m_status = IEEE_802_15_4_SUCCESS;
-            m_mcpsDataConfirmCallback (confirmParams);
+            m_ackWaitTimeout.Cancel ();
+            PrepareRetransmission ();
+          }
+          else if (m_lrWpanMacState == MAC_CSMA)
+          {
+            // \todo: If we receive a packet while doing CSMA/CA, should  we drop the packet because of channel busy,
+            //        or should we restart CSMA/CA for the packet after sending the ACK?
+            // Currently we simply restart CSMA/CA after sending the ACK.
+            m_csmaCa->Cancel ();
+          }
+          // Cancel any pending MAC state change, ACKs have higher priority.
+          m_setMacState.Cancel ();
+          ChangeMacState (MAC_IDLE);
+          m_setMacState = Simulator::ScheduleNow (&MyMac::SendAck, this, receivedMacHdr.GetSeqNum ());
+        }
+        if (receivedMacHdr.IsData () && !m_mcpsDataIndicationCallback.IsNull ())
+        {
+          // If it is a data frame, push it up the stack.
+          NS_LOG_DEBUG ("PdDataIndication():  Packet is for me; forwarding up");
+          m_mcpsDataIndicationCallback (params, p);
+        }
+        else if (receivedMacHdr.IsAcknowledgment () && m_txPkt && m_lrWpanMacState == MAC_ACK_PENDING)
+        {
+          std::cout << m_phy << "Acked" << std::endl;
+          NS_LOG_DEBUG("Acked");
+          LrWpanMacHeader macHdr;
+          m_txPkt->PeekHeader (macHdr);
+          if (receivedMacHdr.GetSeqNum () == macHdr.GetSeqNum ())
+          {
+            m_macTxOkTrace (m_txPkt);
+            // If it is an ACK with the expected sequence number, finish the transmission
+            // and notify the upper layer.
+            m_ackWaitTimeout.Cancel ();
+            if (!m_mcpsDataConfirmCallback.IsNull ())
+            {
+              TxQueueElement *txQElement = m_txQueue.front ();
+              McpsDataConfirmParams confirmParams;
+              confirmParams.m_msduHandle = txQElement->txQMsduHandle;
+              confirmParams.m_status = IEEE_802_15_4_SUCCESS;
+              m_mcpsDataConfirmCallback (confirmParams);
             }
             RemoveFirstTxQElement ();
             m_setMacState.Cancel ();
@@ -331,7 +335,7 @@ MyMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
             }
           }
         }   //IsAcknowledgment
-        Sleep();
+        //Simulator::ScheduleNow (&MyMac::Sleep, this);
       }       //accepetFrame
       else
       {
@@ -351,13 +355,16 @@ MyMac::SetLrWpanMacState (LrWpanMacState macState)
   if (macState == MAC_IDLE)
     {
       ChangeMacState (MAC_IDLE);
-      bool qEmpty = CheckQueue ();
-      if (qEmpty)
+      if (m_macRxOnWhenIdle)
         {
-          NS_LOG_DEBUG("MAC Idle, TxQueue Empty, Scheduling Sleep");
-          m_sleep.Cancel ();
-          m_sleep = Simulator::ScheduleNow (&MyMac::Sleep, this);
+          m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_RX_ON);
         }
+      else
+        {
+          m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TRX_OFF);
+        }
+
+      CheckQueue ();
     }
   else if (macState == MAC_ACK_PENDING)
     {
@@ -367,14 +374,13 @@ MyMac::SetLrWpanMacState (LrWpanMacState macState)
   else if (macState == MAC_CSMA)
     {
       NS_ASSERT (m_lrWpanMacState == MAC_IDLE || m_lrWpanMacState == MAC_ACK_PENDING);
-      NS_LOG_DEBUG("Mac_Csma");
+
       ChangeMacState (MAC_CSMA);
       m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_RX_ON);
     }
   else if (m_lrWpanMacState == MAC_CSMA && macState == CHANNEL_IDLE)
     {
       // Channel is idle, set transmitter to TX_ON
-
       ChangeMacState (MAC_SENDING);
       m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TX_ON);
     }

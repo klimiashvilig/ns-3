@@ -135,7 +135,7 @@ LrWpanMac::LrWpanMac ()
   m_lrWpanMacState = MAC_IDLE;
   ChangeMacState (MAC_IDLE);
 
-  //m_macRxOnWhenIdle = true;
+  m_macRxOnWhenIdle = false;
   m_qSize = 0;
   m_macPanId = 0;
   m_associationStatus = ASSOCIATED;

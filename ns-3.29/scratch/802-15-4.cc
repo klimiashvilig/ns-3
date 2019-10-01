@@ -34,7 +34,7 @@ Ptr<PacketSink> onOffSink1;
 int distance = 300;
 int fileSize = 10;
 bool writeInFile = false;
-const int distanceBetweenNodes = 50;
+const int distanceBetweenNodes = 75;
 std::ofstream myFile;
 double numHops;
 int numNodes;

@@ -95,7 +95,7 @@ int main(int argc, char * argv[])
 
   if (logging) {
     LogComponentEnable ("LrWpanMac", LOG_LEVEL_ALL);
-    LogComponentEnable ("MyMac", LOG_LEVEL_ALL);
+    LogComponentEnable ("LrWpanContikiMac", LOG_LEVEL_ALL);
     LogComponentEnable ("LrWpanPhy", LOG_LEVEL_ALL);
   }
 
@@ -122,7 +122,7 @@ int main(int argc, char * argv[])
   for (int i = 0; i < numNodes; i++) {
     dev[i] = CreateObject<LrWpanNetDevice>();
     //dev[i]->SetAttribute ("UseAcks", BooleanValue(false));
-    dev[i]->SetMac(CreateObject<MyMac>());
+    dev[i]->SetMac(CreateObject<LrWpanContikiMac>());
     // dev[i]->GetMac()->SetAttribute("SleepTime", DoubleValue(sleepTime));
     // dev[i]->GetMac()->SetAttribute("RdcMaxRetries", UintegerValue(maxRetries));
     // dev[i]->GetMac()->SetAttribute("CcaInterval", TimeValue(Seconds(ccaInterval)));
