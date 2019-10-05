@@ -314,7 +314,6 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
   if (m_trxState == IEEE_802_15_4_PHY_TRX_OFF)
     ChangeTrxState(IEEE_802_15_4_PHY_RX_ON);
   // Prevent PHY from receiving another packet while switching the transceiver state.
-  // std::cout << "m_trxState = " << m_trxState << " m_setTRXState.IsRunning() = " << m_setTRXState.IsRunning() << std::endl;
   if (m_trxState == IEEE_802_15_4_PHY_RX_ON && !m_setTRXState.IsRunning ())
     {
       // The specification doesn't seem to refer to BUSY_RX, but vendor
@@ -563,7 +562,6 @@ LrWpanPhy::PdDataRequest (const uint32_t psduLength, Ptr<Packet> p)
           pb->AddPacket (p);
           txParams->packetBurst = pb;
           m_channel->StartTx (txParams);
-          // std::cout << this << " " << p->GetSize() << "B -- EndTx in " << txParams->duration << " at " << (Simulator::Now() + txParams->duration) << std::endl;
           m_pdDataRequest = Simulator::Schedule (txParams->duration, &LrWpanPhy::EndTx, this);
           ChangeTrxState (IEEE_802_15_4_PHY_BUSY_TX);
           return;
@@ -1059,8 +1057,7 @@ LrWpanPhy::SetPlmeSetAttributeConfirmCallback (PlmeSetAttributeConfirmCallback c
 void
 LrWpanPhy::ChangeTrxState (LrWpanPhyEnumeration newState)
 {
-  std::cout << this << " state: " << m_trxState << " -> " << newState << std::endl;
-  NS_LOG_DEBUG (this << " state: " << m_trxState << " -> " << newState);
+  // NS_LOG_UNCOND (this << " state: " << m_trxState << " -> " << newState << " at " << Simulator::Now().GetSeconds());
   m_trxStateLogger (Simulator::Now (), m_trxState, newState);
   m_trxState = newState;
 
@@ -1170,12 +1167,12 @@ LrWpanPhy::EndCca (void)
       NS_LOG_DEBUG ("phyCCAMode = 1");
       if (10 * log10 (m_ccaPeakPower / m_rxSensitivity) >= 10.0)
         {
-          NS_LOG_UNCOND ("BUSY for phyCCAMode = 1");
+          // NS_LOG_UNCOND ("BUSY for phyCCAMode = 1");
           sensedChannelState = IEEE_802_15_4_PHY_BUSY;
         }
       else
         {
-          NS_LOG_DEBUG ("IDLE for phyCCAMode = 1");
+          // NS_LOG_DEBUG ("IDLE for phyCCAMode = 1");
           sensedChannelState = IEEE_802_15_4_PHY_IDLE;
         }
     }
@@ -1280,7 +1277,7 @@ LrWpanPhy::EndTx (void)
       // switching the state.
       if (!m_setTRXState.IsRunning ())
         {
-          NS_LOG_LOGIC ("Apply pending state change to " << m_trxStatePending);
+          NS_LOG_UNCOND ("Apply pending state change to " << m_trxStatePending);
           ChangeTrxState (m_trxStatePending);
           m_trxStatePending = IEEE_802_15_4_PHY_IDLE;
           if (!m_plmeSetTRXStateConfirmCallback.IsNull ())
@@ -1293,7 +1290,8 @@ LrWpanPhy::EndTx (void)
     {
       if (m_trxState != IEEE_802_15_4_PHY_TRX_OFF)
         {
-          ChangeTrxState (IEEE_802_15_4_PHY_TX_ON);
+          NS_LOG_UNCOND("EndTx: Sleeping");
+          ChangeTrxState (IEEE_802_15_4_PHY_TRX_OFF);
         }
     }
 }

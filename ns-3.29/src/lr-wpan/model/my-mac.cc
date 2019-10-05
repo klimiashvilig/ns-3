@@ -86,13 +86,11 @@ MyMac::Sleep ()
   if (m_lrWpanMacState == MAC_IDLE
       && (m_phy->GetTRXState () == IEEE_802_15_4_PHY_RX_ON || m_phy->GetTRXState () == IEEE_802_15_4_PHY_TX_ON))   //MAC_IDLE and TRX_ON
   {
-    std::cout << m_phy << "Sleeping..." << std::endl;
-    NS_LOG_DEBUG("Sleeping...");
+    NS_LOG_UNCOND("Sleeping...");
     m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TRX_OFF);
   }
   else {
-    std::cout << m_phy << "Could not switch to sleep" << std::endl;
-    NS_LOG_DEBUG("Could not switch to sleep");
+    NS_LOG_UNCOND("Could not switch to sleep");
   }
 }
 
@@ -297,7 +295,7 @@ MyMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
         }
         else if (receivedMacHdr.IsAcknowledgment () && m_txPkt && m_lrWpanMacState == MAC_ACK_PENDING)
         {
-          std::cout << m_phy << "Acked" << std::endl;
+          std::cout << m_phy << " Acked" << std::endl;
           NS_LOG_DEBUG("Acked");
           LrWpanMacHeader macHdr;
           m_txPkt->PeekHeader (macHdr);
