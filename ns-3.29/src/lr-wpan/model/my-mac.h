@@ -102,6 +102,8 @@ private:
    */
   EventId m_repeatPkt;
 
+  int last_packet_size;
+
 };
 
 

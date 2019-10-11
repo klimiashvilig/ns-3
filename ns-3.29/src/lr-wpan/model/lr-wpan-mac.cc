@@ -58,7 +58,7 @@ LrWpanMac::GetTypeId (void)
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("MaxQueueSize", 
                    "If a packet arrives when queue at capacity, packet is dropped",
-                   UintegerValue (40),
+                   UintegerValue (4),
                    MakeUintegerAccessor (&LrWpanMac::m_qMaxSize),
                    MakeUintegerChecker<uint32_t> ())
     .AddTraceSource ("MacTxEnqueue",
@@ -454,11 +454,13 @@ LrWpanMac::CheckQueue ()
   // Pull a packet from the queue and start sending, if we are not already sending.
   if (m_lrWpanMacState == MAC_IDLE && !m_txQueue.empty () && m_txPkt == 0 && !m_setMacState.IsRunning ())
     {
+      NS_LOG_DEBUG("Pulling a packet from the queue");
       TxQueueElement *txQElement = m_txQueue.front ();
       m_txPkt = txQElement->txQPkt;
       m_setMacState = Simulator::ScheduleNow (&LrWpanMac::SetLrWpanMacState, this, MAC_CSMA);
       return false;
     }
+      NS_LOG_DEBUG("Queue is empty");
   return true;
 }
 
@@ -964,7 +966,7 @@ LrWpanMac::PlmeSetTRXStateConfirm (LrWpanPhyEnumeration status)
     }
   else if (m_lrWpanMacState == MAC_ACK_PENDING)
     {
-      NS_ASSERT (status == IEEE_802_15_4_PHY_RX_ON || status == IEEE_802_15_4_PHY_SUCCESS);
+      NS_ASSERT (status == IEEE_802_15_4_PHY_RX_ON || status == IEEE_802_15_4_PHY_SUCCESS || status == IEEE_802_15_4_PHY_TRX_OFF); // originally without last or
     }
   else
     {

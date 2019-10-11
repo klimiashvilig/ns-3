@@ -517,7 +517,7 @@ LrWpanPhy::EndRx (Ptr<SpectrumSignalParameters> par)
         }
       else
         {
-          ChangeTrxState (IEEE_802_15_4_PHY_RX_ON);
+          ChangeTrxState (IEEE_802_15_4_PHY_RX_ON); // originally RX_ON
         }
     }
 }
@@ -742,6 +742,7 @@ LrWpanPhy::PlmeSetTRXStateRequest (LrWpanPhyEnumeration state)
   // a packet being actively received)
   if (state == IEEE_802_15_4_PHY_TRX_OFF)
     {
+      NS_LOG_DEBUG("Trying to change to IEEE_802_15_4_PHY_TRX_OFF");
       CancelEd (state);
 
       if ((m_trxState == IEEE_802_15_4_PHY_BUSY_RX)
@@ -1057,7 +1058,7 @@ LrWpanPhy::SetPlmeSetAttributeConfirmCallback (PlmeSetAttributeConfirmCallback c
 void
 LrWpanPhy::ChangeTrxState (LrWpanPhyEnumeration newState)
 {
-  // NS_LOG_UNCOND (this << " state: " << m_trxState << " -> " << newState << " at " << Simulator::Now().GetSeconds());
+  NS_LOG_DEBUG (this << " state: " << m_trxState << " -> " << newState << " at " << Simulator::Now().GetSeconds());
   m_trxStateLogger (Simulator::Now (), m_trxState, newState);
   m_trxState = newState;
 
@@ -1290,8 +1291,7 @@ LrWpanPhy::EndTx (void)
     {
       if (m_trxState != IEEE_802_15_4_PHY_TRX_OFF)
         {
-          NS_LOG_UNCOND("EndTx: Sleeping");
-          ChangeTrxState (IEEE_802_15_4_PHY_TRX_OFF);
+          ChangeTrxState (IEEE_802_15_4_PHY_TX_ON);
         }
     }
 }
