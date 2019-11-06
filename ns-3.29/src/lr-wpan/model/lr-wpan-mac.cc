@@ -452,6 +452,8 @@ LrWpanMac::CheckQueue ()
   NS_LOG_FUNCTION (this);
 
   // Pull a packet from the queue and start sending, if we are not already sending.
+  NS_LOG_DEBUG("m_lrWpanMacState = " << m_lrWpanMacState << " Is queue empty = " << m_txQueue.empty ());
+  NS_LOG_DEBUG("m_txPkt = " << m_txPkt << " !m_setMacState.IsRunning () = " << !m_setMacState.IsRunning ());
   if (m_lrWpanMacState == MAC_IDLE && !m_txQueue.empty () && m_txPkt == 0 && !m_setMacState.IsRunning ())
     {
       NS_LOG_DEBUG("Pulling a packet from the queue");

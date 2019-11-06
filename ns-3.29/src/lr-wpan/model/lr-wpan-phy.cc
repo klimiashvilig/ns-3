@@ -124,6 +124,7 @@ LrWpanPhy::LrWpanPhy (void)
   : m_edRequest (),
     m_setTRXState ()
 {
+  // ackSent = true;
   m_trxState = IEEE_802_15_4_PHY_TRX_OFF;
   m_trxStatePending = IEEE_802_15_4_PHY_IDLE;
 
@@ -188,6 +189,7 @@ LrWpanPhy::DoDispose (void)
   m_signal = 0;
   m_errorModel = 0;
   m_pdDataIndicationCallback = MakeNullCallback< void, uint32_t, Ptr<Packet>, uint8_t > ();
+  // m_ackSentCallback = MakeNullCallback<void> ();
   m_pdDataConfirmCallback = MakeNullCallback< void, LrWpanPhyEnumeration > ();
   m_plmeCcaConfirmCallback = MakeNullCallback< void, LrWpanPhyEnumeration > ();
   m_plmeEdConfirmCallback = MakeNullCallback< void, LrWpanPhyEnumeration,uint8_t > ();
@@ -338,7 +340,7 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
       *interferenceAndNoise -= *lrWpanRxParams->psd;
       *interferenceAndNoise += *m_noise;
       double sinr = LrWpanSpectrumValueHelper::TotalAvgPower (lrWpanRxParams->psd, m_phyPIBAttributes.phyCurrentChannel) / LrWpanSpectrumValueHelper::TotalAvgPower (interferenceAndNoise, m_phyPIBAttributes.phyCurrentChannel);
-
+      NS_LOG_DEBUG("SNR = " << sinr);
       // Std. 802.15.4-2006, appendix E, Figure E.2
       // At SNR < -5 the BER is less than 10e-1.
       // It's useless to even *try* to decode the packet.
@@ -352,6 +354,7 @@ LrWpanPhy::StartRx (Ptr<SpectrumSignalParameters> spectrumRxParams)
         }
       else
         {
+          // ChangeTrxState (IEEE_802_15_4_PHY_TRX_OFF); // Added
           m_phyRxDropTrace (p);
         }
     }
@@ -527,6 +530,8 @@ LrWpanPhy::PdDataRequest (const uint32_t psduLength, Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << psduLength << p);
 
+  NS_LOG_UNCOND("Phy packet size = " << p->GetSize());
+
   if (psduLength > aMaxPhyPacketSize)
     {
       if (!m_pdDataConfirmCallback.IsNull ())
@@ -697,7 +702,7 @@ LrWpanPhy::PlmeSetTRXStateRequest (LrWpanPhyEnumeration state)
                 && (state != IEEE_802_15_4_PHY_FORCE_TRX_OFF)
                 && (state != IEEE_802_15_4_PHY_TX_ON) );
 
-  NS_LOG_LOGIC ("Trying to set m_trxState from " << m_trxState << " to " << state);
+  NS_LOG_LOGIC ("Trying to set m_trxState from " << m_trxState << " to " << state << " at " << Simulator::Now().GetSeconds());
   // this method always overrides previous state setting attempts
   if (!m_setTRXState.IsExpired ())
     {
@@ -1013,6 +1018,12 @@ LrWpanPhy::SetPdDataIndicationCallback (PdDataIndicationCallback c)
   m_pdDataIndicationCallback = c;
 }
 
+// void
+// LrWpanPhy::SetAckSentCallback (ackSentCallback c) {
+//   NS_LOG_FUNCTION (this);
+//   m_ackSentCallback = c;
+// }
+
 void
 LrWpanPhy::SetPdDataConfirmCallback (PdDataConfirmCallback c)
 {
@@ -1241,12 +1252,19 @@ LrWpanPhy::EndSetTRXState (void)
     }
 }
 
+// bool
+// LrWpanPhy::GetAckSent() {
+//   return ackSent;
+// }
+
 void
 LrWpanPhy::EndTx (void)
 {
   NS_LOG_FUNCTION (this << Simulator::Now());
   NS_ABORT_IF ( (m_trxState != IEEE_802_15_4_PHY_BUSY_TX) && (m_trxState != IEEE_802_15_4_PHY_TRX_OFF));
 
+  // if (m_currentTxPacket.first->GetSize() == 5)
+  //   ackSent = true;
   if (m_currentTxPacket.second == false)
     {
       NS_LOG_DEBUG ("Packet successfully transmitted");

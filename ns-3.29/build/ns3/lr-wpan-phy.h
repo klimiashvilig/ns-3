@@ -177,6 +177,8 @@ typedef struct
  */
 typedef Callback< void, uint32_t, Ptr<Packet>, uint8_t > PdDataIndicationCallback;
 
+// typedef Callback<bool> ackSentCallback; 
+
 /**
  * \ingroup lr-wpan
  *
@@ -265,6 +267,8 @@ class LrWpanPhy : public SpectrumPhy
 {
 
 public:
+
+  // bool GetAckSent();
   /**
    * Get the type ID.
    *
@@ -425,6 +429,8 @@ public:
    */
   void SetPdDataIndicationCallback (PdDataIndicationCallback c);
 
+  // void SetAckSentCallBack (ackSentCallback c);
+
   /**
    * set the callback for the end of a TX, as part of the
    * interconnections betweenthe PHY and the MAC. The callback
@@ -561,6 +567,8 @@ protected:
   static const LrWpanPhyPpduHeaderSymbolNumber ppduHeaderSymbolNumbers[7];
 
 private:
+
+  // bool ackSent;
 
   /** List of Phy Listeners. */
   typedef std::list<LrWpanPhyListener *> ListenerList;
@@ -826,6 +834,8 @@ private:
    * See IEEE 802.15.4-2006, section 6.2.1.3.
    */
   PdDataIndicationCallback m_pdDataIndicationCallback;
+
+  // ackSentCallback m_ackSentCallback;
 
   /**
    * This callback is used to report packet transmission status to the MAC layer.

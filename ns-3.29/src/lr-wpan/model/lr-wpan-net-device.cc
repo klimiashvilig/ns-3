@@ -139,6 +139,7 @@ LrWpanNetDevice::CompleteConfig (void)
   m_phy->SetDevice (this);
 
   m_phy->SetPdDataIndicationCallback (MakeCallback (&LrWpanMac::PdDataIndication, m_mac));
+  // m_phy->SetAckSentCallback (MakeCallback (&MyMac::WaitForAck, m_mac));
   m_phy->SetPdDataConfirmCallback (MakeCallback (&LrWpanMac::PdDataConfirm, m_mac));
   m_phy->SetPlmeEdConfirmCallback (MakeCallback (&LrWpanMac::PlmeEdConfirm, m_mac));
   m_phy->SetPlmeGetAttributeConfirmCallback (MakeCallback (&LrWpanMac::PlmeGetAttributeConfirm, m_mac));

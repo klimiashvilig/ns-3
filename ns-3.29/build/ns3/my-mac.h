@@ -49,6 +49,7 @@ public:
   virtual void McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p);
   virtual void PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi);
   void SetLrWpanMacState (LrWpanMacState macState);
+  // virtual void SendAck (uint8_t seqno);
 
 protected:
   // Inherited from Object.
@@ -81,6 +82,8 @@ private:
    * Sets current state.
    */
   void SetLrWpanRadioState (const LrWpanPhyEnumeration state);
+
+  // void ChangeAckSent();
   /**
    * The number of already used retransmission for the currently transmitted
    * packet.
@@ -101,6 +104,8 @@ private:
    * Scheduler event of a repeated data packet.
    */
   EventId m_repeatPkt;
+
+  // bool ackSent;
 
 };
 
