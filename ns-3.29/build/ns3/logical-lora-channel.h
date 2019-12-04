@@ -25,6 +25,7 @@
 #include "ns3/sub-band.h"
 
 namespace ns3 {
+namespace lorawan {
 
 class SubBand;
 
@@ -40,11 +41,10 @@ class SubBand;
 class LogicalLoraChannel : public Object
 {
 public:
-
   static TypeId GetTypeId (void);
 
-  LogicalLoraChannel();
-  virtual ~LogicalLoraChannel();
+  LogicalLoraChannel ();
+  virtual ~LogicalLoraChannel ();
 
   LogicalLoraChannel (double frequency);
 
@@ -70,7 +70,7 @@ public:
    *
    * \param frequencyMHz The center frequency this channel should be at.
    */
-  void SetFrequency (double frequencyMHz);
+  // void SetFrequency (double frequencyMHz);
 
   /**
    * Set the minimum Data Rate that is allowed on this channel.
@@ -141,4 +141,5 @@ bool operator!= (const Ptr<LogicalLoraChannel>& first, const Ptr<LogicalLoraChan
 
 }
 
+}
 #endif /* LOGICAL_LORA_CHANNEL_H */

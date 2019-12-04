@@ -32,6 +32,7 @@
 #include <string>
 
 namespace ns3 {
+namespace lorawan {
 
 /**
  * This class can be used to install PeriodicSender applications on a wide
@@ -41,8 +42,6 @@ class PeriodicSenderHelper
 {
 public:
   PeriodicSenderHelper ();
-
-  PeriodicSenderHelper(int fileSize);
 
   ~PeriodicSenderHelper ();
 
@@ -62,6 +61,11 @@ public:
    */
   void SetPeriod (Time period);
 
+  void SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv);
+
+  void SetPacketSize (uint8_t size);
+
+
 private:
   Ptr<Application> InstallPriv (Ptr<Node> node) const;
 
@@ -74,8 +78,13 @@ private:
   Time m_period; //!< The period with which the application will be set to send
                  // messages
 
+  Ptr<RandomVariableStream> m_pktSizeRV; // whether or not a random component is added to the packet size
+
+  uint8_t m_pktSize; // the packet size.
+
 };
 
 } // namespace ns3
 
+}
 #endif /* PERIODIC_SENDER_HELPER_H */

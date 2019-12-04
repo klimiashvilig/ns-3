@@ -25,19 +25,19 @@
 #include "ns3/net-device.h"
 #include "ns3/lora-channel.h"
 #include "ns3/lora-phy.h"
-#include "ns3/end-device-lora-phy.h"
-#include "ns3/gateway-lora-phy.h"
-#include "ns3/lora-mac.h"
+#include "ns3/simple-end-device-lora-phy.h"
+#include "ns3/simple-gateway-lora-phy.h"
+#include "ns3/lorawan-mac.h"
 
 namespace ns3 {
+namespace lorawan {
 
 /**
-  * Helper to install LoraPhy instances on multiple Nodes.
-  */
+ * Helper to install LoraPhy instances on multiple Nodes.
+ */
 class LoraPhyHelper
 {
 public:
-
   /**
    * Enum for the type of device: End Device (ED) or Gateway (GW)
    */
@@ -69,6 +69,8 @@ public:
    */
   void SetDeviceType (enum DeviceType dt);
 
+  TypeId GetDeviceType (void) const;
+
   /**
    * Set an attribute of the underlying PHY object.
    *
@@ -86,8 +88,23 @@ public:
    */
   Ptr<LoraPhy> Create (Ptr<Node> node, Ptr<NetDevice> device) const;
 
-private:
+  /**
+   * Set the maximum number of gateway receive paths
+   *
+   * \param maxReceptionPaths The maximum number of reception paths at
+   *  the gateway
+   */
+  void SetMaxReceptionPaths (int maxReceptionPaths);
 
+  /**
+   * Set if giving priority to downlink transmission over reception at
+   * the gateways
+   */
+  void SetGatewayTransmissionPriority (bool txPriority);
+
+
+
+private:
   /**
    * The PHY layer factory object.
    */
@@ -97,8 +114,20 @@ private:
    * The channel instance the PHYs will be connected to.
    */
   Ptr<LoraChannel> m_channel;
+
+  /**
+   * The maximum number of receive paths at the gateway
+   */
+  int m_maxReceptionPaths;
+
+  /**
+   * If giving priority to downlink transmission over reception at the gateways
+   */
+  bool m_txPriority;
+
 };
 
-} //namespace ns3
+}   //namespace ns3
 
+}
 #endif /* LORA_PHY_HELPER_H */

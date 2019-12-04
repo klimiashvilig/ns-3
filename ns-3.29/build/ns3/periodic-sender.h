@@ -23,14 +23,15 @@
 
 #include "ns3/application.h"
 #include "ns3/nstime.h"
-#include "ns3/lora-mac.h"
+#include "ns3/lorawan-mac.h"
 #include "ns3/attribute.h"
 
 namespace ns3 {
+namespace lorawan {
 
-class PeriodicSender : public Application {
+class PeriodicSender : public Application
+{
 public:
-
   PeriodicSender ();
   ~PeriodicSender ();
 
@@ -52,6 +53,16 @@ public:
    * Set the initial delay of this application
    */
   void SetInitialDelay (Time delay);
+
+  /**
+   * Set packet size
+   */
+  void SetPacketSize (uint8_t size);
+
+  /**
+   * Set if using randomness in the packet size
+   */
+  void SetPacketSizeRandomVariable (Ptr <RandomVariableStream> rv);
 
   /**
    * Send a packet using the LoraNetDevice's Send method
@@ -87,20 +98,23 @@ private:
   /**
    * The MAC layer of this node
    */
-  Ptr<LoraMac> m_mac;
+  Ptr<LorawanMac> m_mac;
 
   /**
-   * The size of the packets this application sends
+   * The packet size.
    */
-  Ptr<RandomVariableStream> m_pktSize;
+  uint8_t m_basePktSize;
+
 
   /**
-   * Whether or not this application uses a random packet size.
+   * The random variable that adds bytes to the packet size
    */
-  bool m_randomPktSize;
+  Ptr<RandomVariableStream> m_pktSizeRV;
+
+
 };
 
 } //namespace ns3
 
+}
 #endif /* SENDER_APPLICATION */
-

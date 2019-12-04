@@ -112,6 +112,11 @@ public:
    *
    * \param dataRate The dataRate to use when transmitting.
    */
+  void SetCodingRate (uint8_t dataRate);
+
+  /*
+   * Sets the coding rate
+   */
   void SetDataRate (uint8_t dataRate);
 
   /**

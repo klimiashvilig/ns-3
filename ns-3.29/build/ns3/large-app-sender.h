@@ -33,7 +33,7 @@ namespace ns3 {
 class LargeAppSender : public Application {
 public:
 
-  LargeAppSender (int fileSize, int dataRate, bool sendToAll);
+  LargeAppSender (int codingRate, int fileSize, int dataRate, bool sendToAll);
   ~LargeAppSender ();
 
   static TypeId GetTypeId (void);
@@ -90,6 +90,10 @@ private:
    * The data rate
    */
   int data_rate;
+  /**
+   * The coding rate
+   */
+  int coding_rate;
 
   /**
    * The maximum payload size
