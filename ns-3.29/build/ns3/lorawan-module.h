@@ -20,6 +20,8 @@
 #include "gateway-lorawan-mac.h"
 #include "gateway-status.h"
 #include "hex-grid-position-allocator.h"
+#include "large-app-sender-helper.h"
+#include "large-app-sender.h"
 #include "logical-lora-channel-helper.h"
 #include "logical-lora-channel.h"
 #include "lora-channel.h"

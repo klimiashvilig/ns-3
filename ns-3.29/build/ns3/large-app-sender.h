@@ -23,17 +23,18 @@
 
 #include "ns3/application.h"
 #include "ns3/nstime.h"
-#include "ns3/lora-mac.h"
+#include "ns3/lorawan-mac.h"
 #include "ns3/attribute.h"
 
 #include "ns3/callback.h"
 
 namespace ns3 {
+namespace lorawan {
 
 class LargeAppSender : public Application {
 public:
 
-  LargeAppSender (int codingRate, int fileSize, int dataRate, bool sendToAll);
+  LargeAppSender (int fileSize, int dataRate);
   ~LargeAppSender ();
 
   static TypeId GetTypeId (void);
@@ -47,11 +48,6 @@ public:
    * Set the file size.
    */
   void SetFileSize (int fileSize);
-
-  /**
-   * Set the send_to_all parameter.
-   */
-  void SetSendToAll (bool sendToAll);
 
   /**
    * Set the send_to_all parameter.
@@ -85,15 +81,11 @@ private:
   /**
    * The MAC layer of this node.
    */
-  Ptr<LoraMac> m_mac;
+  Ptr<LorawanMac> m_mac;
   /**
    * The data rate
    */
   int data_rate;
-  /**
-   * The coding rate
-   */
-  int coding_rate;
 
   /**
    * The maximum payload size
@@ -109,5 +101,6 @@ private:
 };
 
 } //namespace ns3
+} //namespace lorawan
 
 #endif /* ONE_SHOT_APPLICATION */

@@ -9,7 +9,7 @@
 #include "ns3/mobility-helper.h"
 #include "ns3/node-container.h"
 #include "ns3/position-allocator.h"
-#include "ns3/periodic-sender-helper.h"
+#include "ns3/large-app-sender-helper.h"
 #include "ns3/command-line.h"
 #include "ns3/basic-energy-source-helper.h"
 #include "ns3/lora-radio-energy-model-helper.h"
@@ -33,16 +33,16 @@ bool writeInFile = false;
 bool variableDistance = true;
 
 DeviceEnergyModelContainer endDeviceModels;
-DeviceEnergyModelContainer gatewayModels;
+// DeviceEnergyModelContainer gatewayModels;
 
 void 
 PacketReceptionCallback(Ptr<Packet const> packet, uint32_t systemId) {
     double energyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = endDeviceModels.Begin(); iter != endDeviceModels.End(); iter++)
         energyConsumed += (*iter)->GetTotalEnergyConsumption();
-    std::cout << "EndDevice energy consumed - " << energyConsumed << std::endl;
-    for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++)
-        energyConsumed += (*iter)->GetTotalEnergyConsumption();
+    // std::cout << "EndDevice energy consumed - " << energyConsumed << std::endl;
+    // for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++)
+    //     energyConsumed += (*iter)->GetTotalEnergyConsumption();
     std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s  |  Total energy consumed - " << energyConsumed << "J" << std::endl;
 }
 
@@ -165,11 +165,11 @@ int main (int argc, char *argv[])
     EnergySourceContainer endDeviceSources = basicSourceHelper.Install (endDevices);
     EnergySourceContainer gatewaySources = basicSourceHelper.Install (gateways);
     /* device energy model */
-    LoraEnergyModelHelper loraEnergyHelper;
+    LoraRadioEnergyModelHelper loraEnergyHelper;
     // configure energy model
     // install device model
     endDeviceModels = loraEnergyHelper.Install (endDevicesContainer, endDeviceSources);
-    gatewayModels = loraEnergyHelper.Install (gatewayContainer, gatewaySources);
+    // gatewayModels = loraEnergyHelper.Install (gatewayContainer, gatewaySources);
 
     Simulator::Stop (Hours (2));
 

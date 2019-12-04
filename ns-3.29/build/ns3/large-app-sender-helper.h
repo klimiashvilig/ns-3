@@ -32,6 +32,7 @@
 #include <string>
 
 namespace ns3 {
+namespace lorawan {
 
 /**
  * This class can be used to install LargeAppSender applications on multiple
@@ -54,8 +55,6 @@ public:
 
   int GetFileSize ();
 
-  void SetSendToAll (bool sendToAll);
-
   void SetReceiver (uint32_t rec);
 
 private:
@@ -65,11 +64,10 @@ private:
 
   int file_size;
 
-  bool send_to_all;
-
   uint32_t receiver;
 };
 
 } // namespace ns3
+} //namespace lorawan
 
 #endif /* LARGE_APP_SENDER_HELPER_H */
