@@ -132,6 +132,24 @@ MinstrelWifiManager::SetupMac (const Ptr<WifiMac> mac)
   WifiRemoteStationManager::SetupMac (mac);
 }
 
+void
+MinstrelWifiManager::DoInitialize ()
+{
+  NS_LOG_FUNCTION (this);
+  if (GetHtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
+    }
+  if (GetVhtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
+    }
+  if (GetHeSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
+    }
+}
+
 int64_t
 MinstrelWifiManager::AssignStreams (int64_t stream)
 {
@@ -198,9 +216,6 @@ MinstrelWifiManager::CheckInit (MinstrelWifiRemoteStation *station)
       InitSampleTable (station);
       RateInit (station);
       station->m_initialized = true;
-      std::ostringstream tmp;
-      tmp << "minstrel-stats-" << station->m_state->m_address << ".txt";
-      station->m_statsFile.open (tmp.str ().c_str (), std::ios::out);
     }
 }
 
@@ -354,7 +369,6 @@ MinstrelWifiManager::GetDataTxVector (MinstrelWifiRemoteStation *station)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   if (!station->m_initialized)
@@ -367,7 +381,7 @@ MinstrelWifiManager::GetDataTxVector (MinstrelWifiRemoteStation *station)
       NS_LOG_DEBUG ("New datarate: " << mode.GetDataRate (channelWidth));
       m_currentRate = mode.GetDataRate (channelWidth);
     }
-  return WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  return WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
 }
 
 WifiTxVector
@@ -378,7 +392,6 @@ MinstrelWifiManager::GetRtsTxVector (MinstrelWifiRemoteStation *station)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   WifiTxVector rtsTxVector;
@@ -391,7 +404,7 @@ MinstrelWifiManager::GetRtsTxVector (MinstrelWifiRemoteStation *station)
     {
       mode = GetNonErpSupported (station, 0);
     }
-  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
   return rtsTxVector;
 }
 
@@ -965,7 +978,7 @@ MinstrelWifiManager::CalculateTimeUnicastPacket (Time dataTransmissionTime, uint
       tt += dataTransmissionTime + GetMac ()->GetAckTimeout ();
 
       //Add average back off (half the current contention window)
-      tt += NanoSeconds ((cw / 2) * GetMac ()->GetSlot ());
+      tt += (cw / 2.0) * GetMac ()->GetSlot ();
 
       //Update contention window
       cw = std::min (cwMax, (cw + 1) * 2);
@@ -1025,6 +1038,13 @@ MinstrelWifiManager::PrintSampleTable (MinstrelWifiRemoteStation *station)
 void
 MinstrelWifiManager::PrintTable (MinstrelWifiRemoteStation *station)
 {
+  if (!station->m_statsFile.is_open ())
+    {
+      std::ostringstream tmp;
+      tmp << "minstrel-stats-" << station->m_state->m_address << ".txt";
+      station->m_statsFile.open (tmp.str ().c_str (), std::ios::out);
+    }
+
   station->m_statsFile << "best   _______________rate________________    ________statistics________    ________last_______    ______sum-of________\n" <<
     "rate  [      name       idx airtime max_tp]  [avg(tp) avg(prob) sd(prob)]  [prob.|retry|suc|att]  [#success | #attempts]\n";
 
@@ -1081,36 +1101,6 @@ MinstrelWifiManager::PrintTable (MinstrelWifiRemoteStation *station)
                        << "      lookaround " << station->m_samplePacketsCount << "\n\n";
 
   station->m_statsFile.flush ();
-}
-
-void
-MinstrelWifiManager::SetHtSupported (bool enable)
-{
-  //HT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
-    }
-}
-
-void
-MinstrelWifiManager::SetVhtSupported (bool enable)
-{
-  //VHT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
-    }
-}
-
-void
-MinstrelWifiManager::SetHeSupported (bool enable)
-{
-  //HE is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
-    }
 }
 
 } //namespace ns3

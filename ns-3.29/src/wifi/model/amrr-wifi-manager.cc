@@ -103,6 +103,24 @@ AmrrWifiManager::~AmrrWifiManager ()
   NS_LOG_FUNCTION (this);
 }
 
+void
+AmrrWifiManager::DoInitialize ()
+{
+  NS_LOG_FUNCTION (this);
+  if (GetHtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
+    }
+  if (GetVhtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
+    }
+  if (GetHeSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
+    }
+}
+
 WifiRemoteStation *
 AmrrWifiManager::DoCreateStation (void) const
 {
@@ -348,7 +366,6 @@ AmrrWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   WifiMode mode = GetSupported (station, rateIndex);
@@ -357,7 +374,7 @@ AmrrWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
       NS_LOG_DEBUG ("New datarate: " << mode.GetDataRate (channelWidth));
       m_currentRate = mode.GetDataRate (channelWidth);
     }
-  return WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  return WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
 }
 
 WifiTxVector
@@ -368,7 +385,6 @@ AmrrWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   UpdateMode (station);
@@ -382,7 +398,7 @@ AmrrWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
     {
       mode = GetNonErpSupported (station, 0);
     }
-  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
   return rtsTxVector;
 }
 
@@ -390,36 +406,6 @@ bool
 AmrrWifiManager::IsLowLatency (void) const
 {
   return true;
-}
-
-void
-AmrrWifiManager::SetHtSupported (bool enable)
-{
-  //HT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
-    }
-}
-
-void
-AmrrWifiManager::SetVhtSupported (bool enable)
-{
-  //VHT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
-    }
-}
-
-void
-AmrrWifiManager::SetHeSupported (bool enable)
-{
-  //HE is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
-    }
 }
 
 } //namespace ns3

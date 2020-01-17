@@ -19,4 +19,6 @@
 #include "radvd.h"
 #include "v4ping-helper.h"
 #include "v4ping.h"
+#include "v4traceroute-helper.h"
+#include "v4traceroute.h"
 #endif

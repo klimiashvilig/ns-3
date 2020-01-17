@@ -175,7 +175,7 @@ public:
    * A \c const dereference.
    * \returns A pointer to the underlying object.
    */
-  const T &operator * () const;
+  T &operator * () const;
   /**
    * A  dereference.
    * \returns A pointer to the underlying object.
@@ -780,6 +780,7 @@ template <typename T>
 T *
 Ptr<T>::operator -> () 
 {
+  NS_ASSERT_MSG (m_ptr, "Attempted to dereference zero pointer");
   return m_ptr;
 }
 
@@ -787,13 +788,15 @@ template <typename T>
 T *
 Ptr<T>::operator -> () const
 {
+  NS_ASSERT_MSG (m_ptr, "Attempted to dereference zero pointer");
   return m_ptr;
 }
 
 template <typename T>
-const T &
+T &
 Ptr<T>::operator * () const
 {
+  NS_ASSERT_MSG (m_ptr, "Attempted to dereference zero pointer");
   return *m_ptr;
 }
 
@@ -801,6 +804,7 @@ template <typename T>
 T &
 Ptr<T>::operator * ()
 {
+  NS_ASSERT_MSG (m_ptr, "Attempted to dereference zero pointer");
   return *m_ptr;
 }
 

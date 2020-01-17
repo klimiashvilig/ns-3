@@ -45,6 +45,9 @@ struct RrpaaWifiRemoteStation;
  * international conference on Mobile computing and networking (pp. 146-157). ACM.
  * http://ocw.cs.pub.ro/courses/_media/isrm/articole/rrate_adapt_mobicom06.pdf
  *
+ * This RAA does not support HT modes and will error
+ * exit if the user tries to configure this RAA with a Wi-Fi MAC
+ * that supports 802.11n or higher.
  */
 
 /**
@@ -82,9 +85,6 @@ public:
   // Inherited from WifiRemoteStationManager
   virtual void SetupPhy (const Ptr<WifiPhy> phy);
   virtual void SetupMac (const Ptr<WifiMac> mac);
-  virtual void SetHtSupported (bool enable);
-  virtual void SetVhtSupported (bool enable);
-  virtual void SetHeSupported (bool enable);
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -98,7 +98,8 @@ public:
   int64_t AssignStreams (int64_t stream);
 
 private:
-  //overridden from base class
+  // Overridden from base class.
+  void DoInitialize (void);
   virtual WifiRemoteStation * DoCreateStation (void) const;
   virtual void DoReportRxOk (WifiRemoteStation *station,
                              double rxSnr, WifiMode txMode);

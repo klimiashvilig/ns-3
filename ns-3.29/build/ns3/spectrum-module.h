@@ -33,6 +33,7 @@
 #include "spectrum-signal-parameters.h"
 #include "spectrum-test.h"
 #include "spectrum-value.h"
+#include "trace-fading-loss-model.h"
 #include "tv-spectrum-transmitter-helper.h"
 #include "tv-spectrum-transmitter.h"
 #include "waveform-generator-helper.h"

@@ -1,15 +1,12 @@
 ## -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 def build(bld):
-    obj = bld.create_ns3_module('lr-wpan', ['core', 'network', 'mobility', 'spectrum', 'propagation', 'energy'])
+    obj = bld.create_ns3_module('lr-wpan', ['core', 'network', 'mobility', 'spectrum', 'propagation'])
     obj.source = [
         'model/lr-wpan-error-model.cc',
         'model/lr-wpan-interference-helper.cc',
         'model/lr-wpan-phy.cc',
         'model/lr-wpan-mac.cc',
-        'model/lr-wpan-contikimac.cc',
-        'model/my-mac.cc',
-        'model/lr-wpan-nullmac.cc',
         'model/lr-wpan-mac-header.cc',
         'model/lr-wpan-mac-trailer.cc',
         'model/lr-wpan-csmaca.cc',
@@ -17,9 +14,7 @@ def build(bld):
         'model/lr-wpan-spectrum-value-helper.cc',
         'model/lr-wpan-spectrum-signal-parameters.cc',
         'model/lr-wpan-lqi-tag.cc',
-        'model/lr-wpan-radio-energy-model.cc',
         'helper/lr-wpan-helper.cc',
-        'helper/lr-wpan-radio-energy-model-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('lr-wpan')
@@ -41,9 +36,6 @@ def build(bld):
         'model/lr-wpan-interference-helper.h',
         'model/lr-wpan-phy.h',
         'model/lr-wpan-mac.h',
-        'model/lr-wpan-contikimac.h',
-        'model/my-mac.h',
-        'model/lr-wpan-nullmac.h',
         'model/lr-wpan-mac-header.h',
         'model/lr-wpan-mac-trailer.h',
         'model/lr-wpan-csmaca.h',
@@ -51,9 +43,7 @@ def build(bld):
         'model/lr-wpan-spectrum-value-helper.h',
         'model/lr-wpan-spectrum-signal-parameters.h',
         'model/lr-wpan-lqi-tag.h',
-        'model/lr-wpan-radio-energy-model.h',
         'helper/lr-wpan-helper.h',
-        'helper/lr-wpan-radio-energy-model-helper.h',
         ]
 
     if (bld.env['ENABLE_EXAMPLES']):

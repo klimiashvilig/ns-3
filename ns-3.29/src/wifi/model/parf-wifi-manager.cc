@@ -102,6 +102,24 @@ ParfWifiManager::SetupPhy (const Ptr<WifiPhy> phy)
   WifiRemoteStationManager::SetupPhy (phy);
 }
 
+void
+ParfWifiManager::DoInitialize ()
+{
+  NS_LOG_FUNCTION (this);
+  if (GetHtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
+    }
+  if (GetVhtSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
+    }
+  if (GetHeSupported ())
+    {
+      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
+    }
+}
+
 WifiRemoteStation *
 ParfWifiManager::DoCreateStation (void) const
 {
@@ -297,7 +315,6 @@ ParfWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   CheckInit (station);
@@ -316,7 +333,7 @@ ParfWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
       m_rateChange (prevRate, rate, station->m_state->m_address);
       station->m_prevRateIndex = station->m_rateIndex;
     }
-  return WifiTxVector (mode, station->m_powerLevel, GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  return WifiTxVector (mode, station->m_powerLevel, GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
 }
 
 WifiTxVector
@@ -329,7 +346,6 @@ ParfWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
   uint16_t channelWidth = GetChannelWidth (station);
   if (channelWidth > 20 && channelWidth != 22)
     {
-      //avoid to use legacy rate adaptation algorithms for IEEE 802.11n/ac
       channelWidth = 20;
     }
   WifiTxVector rtsTxVector;
@@ -342,7 +358,7 @@ ParfWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
     {
       mode = GetNonErpSupported (station, 0);
     }
-  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode, GetAddress (station)), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
+  rtsTxVector = WifiTxVector (mode, GetDefaultTxPowerLevel (), GetPreambleForTransmission (mode.GetModulationClass (), GetShortPreambleEnabled (), UseGreenfieldForDestination (GetAddress (station))), 800, 1, 1, 0, channelWidth, GetAggregation (station), false);
   return rtsTxVector;
 }
 
@@ -350,36 +366,6 @@ bool
 ParfWifiManager::IsLowLatency (void) const
 {
   return true;
-}
-
-void
-ParfWifiManager::SetHtSupported (bool enable)
-{
-  //HT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HT rates");
-    }
-}
-
-void
-ParfWifiManager::SetVhtSupported (bool enable)
-{
-  //VHT is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support VHT rates");
-    }
-}
-
-void
-ParfWifiManager::SetHeSupported (bool enable)
-{
-  //HE is not supported by this algorithm.
-  if (enable)
-    {
-      NS_FATAL_ERROR ("WifiRemoteStationManager selected does not support HE rates");
-    }
 }
 
 } //namespace ns3

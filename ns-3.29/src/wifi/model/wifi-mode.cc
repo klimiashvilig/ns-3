@@ -96,12 +96,6 @@ WifiMode::IsAllowed (uint16_t channelWidth, uint8_t nss) const
           return false;
         }
     }
-  else
-    {
-      //We should not go here!
-      NS_ASSERT (false);
-      return false;
-    }
   return true;
 }
 
@@ -447,7 +441,7 @@ WifiMode::GetConstellationSize (void) const
           return 256;
         case 10:
         case 11:
-          NS_ASSERT (item->modClass == WIFI_MOD_CLASS_HE);
+          NS_ASSERT (item->modClass != WIFI_MOD_CLASS_VHT);
           return 1024;
         default:
           return 0;
@@ -478,7 +472,7 @@ uint8_t
 WifiMode::GetMcsValue (void) const
 {
   WifiModeFactory::WifiModeItem *item = WifiModeFactory::GetFactory ()->Get (m_uid);
-  if (item->modClass == WIFI_MOD_CLASS_HT || item->modClass == WIFI_MOD_CLASS_VHT || item->modClass == WIFI_MOD_CLASS_HE)
+  if (item->modClass >= WIFI_MOD_CLASS_HT)
     {
       return item->mcsValue;
     }
@@ -508,7 +502,7 @@ WifiMode::GetNonHtReferenceRate (void) const
 {
   uint64_t dataRate;
   WifiModeFactory::WifiModeItem *item = WifiModeFactory::GetFactory ()->Get (m_uid);
-  if (item->modClass == WIFI_MOD_CLASS_HT || item->modClass == WIFI_MOD_CLASS_VHT || item->modClass == WIFI_MOD_CLASS_HE)
+  if (item->modClass >= WIFI_MOD_CLASS_HT)
     {
       WifiCodeRate codeRate = GetCodeRate ();
       switch (GetConstellationSize ())
@@ -721,7 +715,7 @@ WifiModeFactory::CreateWifiMode (std::string uniqueName,
   item->constellationSize = constellationSize;
   item->isMandatory = isMandatory;
 
-  NS_ASSERT (modClass != WIFI_MOD_CLASS_HT && modClass != WIFI_MOD_CLASS_VHT && modClass != WIFI_MOD_CLASS_HE);
+  NS_ASSERT (modClass < WIFI_MOD_CLASS_HT);
   //fill unused mcs item with a dummy value
   item->mcsValue = 0;
 
@@ -739,8 +733,7 @@ WifiModeFactory::CreateWifiMcs (std::string uniqueName,
   item->uniqueUid = uniqueName;
   item->modClass = modClass;
 
-  //The modulation class must be either HT, VHT or HE
-  NS_ASSERT (modClass == WIFI_MOD_CLASS_HT || modClass == WIFI_MOD_CLASS_VHT || modClass == WIFI_MOD_CLASS_HE);
+  NS_ASSERT (modClass >= WIFI_MOD_CLASS_HT);
 
   item->mcsValue = mcsValue;
   //fill unused items with dummy values

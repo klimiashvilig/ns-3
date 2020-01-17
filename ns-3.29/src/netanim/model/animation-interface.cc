@@ -662,7 +662,7 @@ AnimationInterface::WifiPhyTxDropTrace (std::string context, Ptr<const Packet> p
 }
 
 void
-AnimationInterface::WifiPhyRxDropTrace (std::string context, Ptr<const Packet> p)
+AnimationInterface::WifiPhyRxDropTrace (std::string context, Ptr<const Packet> p, WifiPhyRxfailureReason reason)
 {
   const Ptr <const Node> node = GetNodeFromContext (context);
   ++m_nodeWifiPhyRxDrop[node->GetId ()];
@@ -867,7 +867,7 @@ AnimationInterface::UanPhyGenRxTrace (std::string context, Ptr<const Packet> p)
 }
 
 void 
-AnimationInterface::WifiPhyTxBeginTrace (std::string context, Ptr<const Packet> p)
+AnimationInterface::WifiPhyTxBeginTrace (std::string context, Ptr<const Packet> p, double txPowerW)
 {
   NS_LOG_FUNCTION (this);
   return GenericWirelessTxTrace (context, p, AnimationInterface::WIFI);
@@ -882,11 +882,10 @@ AnimationInterface::WifiPhyRxBeginTrace (std::string context, Ptr<const Packet> 
   NS_ASSERT (ndev);
   UpdatePosition (ndev);
   uint64_t animUid = GetAnimUidFromPacket (p);
-  NS_LOG_INFO ("Wifi RxBeginTrace for packet:" << animUid);
+  NS_LOG_INFO ("Wifi RxBeginTrace for packet: " << animUid);
   if (!IsPacketPending (animUid, AnimationInterface::WIFI))
     {
-      NS_ASSERT (0);
-      NS_LOG_WARN ("WifiPhyRxBeginTrace: unknown Uid");
+      NS_ASSERT_MSG (false, "WifiPhyRxBeginTrace: unknown Uid");
       std::ostringstream oss;
       WifiMacHeader hdr;
       if (!p->PeekHeader (hdr))
@@ -1011,8 +1010,7 @@ AnimationInterface::WavePhyRxBeginTrace (std::string context, Ptr<const Packet> 
   NS_LOG_INFO ("Wave RxBeginTrace for packet:" << animUid);
   if (!IsPacketPending (animUid, AnimationInterface::WAVE))
     {
-      NS_ASSERT (0);
-      NS_LOG_WARN ("WavePhyRxBeginTrace: unknown Uid");
+      NS_ASSERT_MSG (false, "WavePhyRxBeginTrace: unknown Uid");
       std::ostringstream oss;
       WifiMacHeader hdr;
       if (!p->PeekHeader (hdr))

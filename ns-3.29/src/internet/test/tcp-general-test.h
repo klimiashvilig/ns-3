@@ -24,6 +24,7 @@
 #include "ns3/tcp-socket-base.h"
 #include "ns3/tcp-congestion-ops.h"
 #include "ns3/tcp-recovery-ops.h"
+#include "ns3/tcp-rate-ops.h"
 #include "ns3/test.h"
 
 namespace ns3 {
@@ -535,6 +536,14 @@ protected:
   Ptr<TcpRxBuffer> GetRxBuffer (SocketWho who);
 
   /**
+   * \brief Get the Tx buffer from selected socket
+   *
+   * \param who socket where get the TCB
+   * \return the tx buffer
+   */
+  Ptr<TcpTxBuffer> GetTxBuffer (SocketWho who);
+
+  /**
    * \brief Get the rWnd of the selected socket
    *
    * \param who socket where check the parameter
@@ -776,6 +785,24 @@ protected:
   {
     NS_UNUSED (oldValue);
     NS_UNUSED (newValue);
+  }
+
+  /**
+   * \brief Track the rate value of TcpRateLinux.
+   * \param rate updated value of TcpRate.
+   */
+  virtual void RateUpdatedTrace (const TcpRateLinux::TcpRateConnection &rate)
+  {
+    NS_UNUSED (rate);
+  }
+
+  /**
+   * \brief Track the rate sample value of TcpRateLinux.
+   * \param sample updated value of TcpRateSample.
+   */
+  virtual void RateSampleUpdatedTrace (const TcpRateLinux::TcpRateSample &sample)
+  {
+    NS_UNUSED (sample);
   }
 
   /**

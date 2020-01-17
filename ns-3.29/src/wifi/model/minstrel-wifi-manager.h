@@ -124,10 +124,10 @@ struct MinstrelWifiRemoteStation : public WifiRemoteStation
  * that it considers successful, and spends a fraction of its time
  * doing 'look around' by trying other rates.
  *
- * Minstrel is appropriate for non-HT/VHT/HE configurations; for HT/VHT/HE
- * (i.e. 802.11n/ac/ax), users should use MinstrelHtWifiManager instead.
+ * Minstrel is appropriate for non-HT configurations; for HT (i.e. 802.11n
+ * or higher), users should use MinstrelHtWifiManager instead.
  * Minstrel will error exit if the user tries to configure it with a
- * Wi-Fi MAC that has VhtSupported, HtSupported or HeSupported set.
+ * Wi-Fi MAC that supports 802.11n or higher.
  *
  * Some notes on this implementation follow.  The implementation has
  * been adapted to bring it closer to the Linux implementation.
@@ -168,9 +168,6 @@ public:
   // Inherited from WifiRemoteStationManager
   void SetupPhy (const Ptr<WifiPhy> phy);
   void SetupMac (const Ptr<WifiMac> mac);
-  void SetHtSupported (bool enable);
-  void SetVhtSupported (bool enable);
-  void SetHeSupported (bool enable);
 
   /**
    * Assign a fixed random variable stream number to the random variables
@@ -258,7 +255,8 @@ public:
   void InitSampleTable (MinstrelWifiRemoteStation *station);
 
 private:
-  //overridden from base class
+  // Overridden from base class.
+  void DoInitialize (void);
   WifiRemoteStation * DoCreateStation (void) const;
   void DoReportRxOk (WifiRemoteStation *station,
                      double rxSnr, WifiMode txMode);

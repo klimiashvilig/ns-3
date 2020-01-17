@@ -7,7 +7,6 @@
     
 
 // Module headers:
-#include "lr-wpan-contikimac.h"
 #include "lr-wpan-csmaca.h"
 #include "lr-wpan-error-model.h"
 #include "lr-wpan-helper.h"
@@ -17,11 +16,7 @@
 #include "lr-wpan-mac-trailer.h"
 #include "lr-wpan-mac.h"
 #include "lr-wpan-net-device.h"
-#include "lr-wpan-nullmac.h"
 #include "lr-wpan-phy.h"
-#include "lr-wpan-radio-energy-model-helper.h"
-#include "lr-wpan-radio-energy-model.h"
 #include "lr-wpan-spectrum-signal-parameters.h"
 #include "lr-wpan-spectrum-value-helper.h"
-#include "my-mac.h"
 #endif

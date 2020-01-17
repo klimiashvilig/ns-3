@@ -52,15 +52,11 @@ LrWpanMac::GetTypeId (void)
   static TypeId tid = TypeId ("ns3::LrWpanMac")
     .SetParent<Object> ()
     .SetGroupName ("LrWpan")
+    .AddConstructor<LrWpanMac> ()
     .AddAttribute ("PanId", "16-bit identifier of the associated PAN",
                    UintegerValue (),
                    MakeUintegerAccessor (&LrWpanMac::m_macPanId),
                    MakeUintegerChecker<uint16_t> ())
-    .AddAttribute ("MaxQueueSize", 
-                   "If a packet arrives when queue at capacity, packet is dropped",
-                   UintegerValue (4),
-                   MakeUintegerAccessor (&LrWpanMac::m_qMaxSize),
-                   MakeUintegerChecker<uint32_t> ())
     .AddTraceSource ("MacTxEnqueue",
                      "Trace source indicating a packet has been "
                      "enqueued in the transaction queue",
@@ -115,6 +111,10 @@ LrWpanMac::GetTypeId (void)
                      "packet sniffer attached to the device",
                      MakeTraceSourceAccessor (&LrWpanMac::m_promiscSnifferTrace),
                      "ns3::Packet::TracedCallback")
+    .AddTraceSource ("MacStateValue",
+                     "The state of LrWpan Mac",
+                     MakeTraceSourceAccessor (&LrWpanMac::m_lrWpanMacState),
+                     "ns3::TracedValueCallback::LrWpanMacState")
     .AddTraceSource ("MacState",
                      "The state of LrWpan Mac",
                      MakeTraceSourceAccessor (&LrWpanMac::m_macStateLogger),
@@ -135,8 +135,7 @@ LrWpanMac::LrWpanMac ()
   m_lrWpanMacState = MAC_IDLE;
   ChangeMacState (MAC_IDLE);
 
-  m_macRxOnWhenIdle = false;
-  m_qSize = 0;
+  m_macRxOnWhenIdle = true;
   m_macPanId = 0;
   m_associationStatus = ASSOCIATED;
   m_selfExt = Mac64Address::Allocate ();
@@ -160,6 +159,15 @@ LrWpanMac::~LrWpanMac ()
 void
 LrWpanMac::DoInitialize ()
 {
+  if (m_macRxOnWhenIdle)
+    {
+      m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_RX_ON);
+    }
+  else
+    {
+      m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TRX_OFF);
+    }
+
   Object::DoInitialize ();
 }
 
@@ -185,7 +193,7 @@ LrWpanMac::DoDispose ()
   Object::DoDispose ();
 }
 
-/*bool
+bool
 LrWpanMac::GetRxOnWhenIdle ()
 {
   return m_macRxOnWhenIdle;
@@ -208,19 +216,19 @@ LrWpanMac::SetRxOnWhenIdle (bool rxOnWhenIdle)
           m_phy->PlmeSetTRXStateRequest (IEEE_802_15_4_PHY_TRX_OFF);
         }
     }
-}*/
+}
 
 void
 LrWpanMac::SetShortAddress (Mac16Address address)
 {
-  NS_LOG_FUNCTION (this << address);
+  //NS_LOG_FUNCTION (this << address);
   m_shortAddress = address;
 }
 
 void
 LrWpanMac::SetExtendedAddress (Mac64Address address)
 {
-  NS_LOG_FUNCTION (this << address);
+  //NS_LOG_FUNCTION (this << address);
   m_selfExt = address;
 }
 
@@ -238,18 +246,10 @@ LrWpanMac::GetExtendedAddress () const
   NS_LOG_FUNCTION (this);
   return m_selfExt;
 }
-
 void
 LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
 {
-  NS_LOG_FUNCTION (this << p << p->GetSize());
-
-  if (m_txQueue.size() == m_qMaxSize)
-  {
-    NS_LOG_DEBUG ("The transmit queue is FULL. Packet dropped.");
-    //CheckQueue();
-    return;
-  }
+  NS_LOG_FUNCTION (this << p);
 
   McpsDataConfirmParams confirmParams;
   confirmParams.m_msduHandle = params.m_msduHandle;
@@ -351,8 +351,6 @@ LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
         {
           macHdr.SetAckReq ();
         }
-       else if (macHdr.GetDstAddrMode () == SHORT_ADDR && macHdr.GetShortDstAddr () == "ff:ff")
-          macHdr.SetNoAckReq ();
     }
   else if (b0 == 0)
     {
@@ -441,29 +439,22 @@ LrWpanMac::McpsDataRequest (McpsDataRequestParams params, Ptr<Packet> p)
   txQElement->txQMsduHandle = params.m_msduHandle;
   txQElement->txQPkt = p;
   m_txQueue.push_back (txQElement);
-  m_qSize++;
 
   CheckQueue ();
 }
 
-bool
+void
 LrWpanMac::CheckQueue ()
 {
   NS_LOG_FUNCTION (this);
 
   // Pull a packet from the queue and start sending, if we are not already sending.
-  NS_LOG_DEBUG("m_lrWpanMacState = " << m_lrWpanMacState << " Is queue empty = " << m_txQueue.empty ());
-  NS_LOG_DEBUG("m_txPkt = " << m_txPkt << " !m_setMacState.IsRunning () = " << !m_setMacState.IsRunning ());
   if (m_lrWpanMacState == MAC_IDLE && !m_txQueue.empty () && m_txPkt == 0 && !m_setMacState.IsRunning ())
     {
-      NS_LOG_DEBUG("Pulling a packet from the queue");
       TxQueueElement *txQElement = m_txQueue.front ();
       m_txPkt = txQElement->txQPkt;
       m_setMacState = Simulator::ScheduleNow (&LrWpanMac::SetLrWpanMacState, this, MAC_CSMA);
-      return false;
     }
-      NS_LOG_DEBUG("Queue is empty");
-  return true;
 }
 
 void
@@ -472,17 +463,10 @@ LrWpanMac::SetCsmaCa (Ptr<LrWpanCsmaCa> csmaCa)
   m_csmaCa = csmaCa;
 }
 
-Ptr<LrWpanCsmaCa>
-LrWpanMac::GetCsmaCa (void)
-{
-  return m_csmaCa;
-}
-
 void
 LrWpanMac::SetPhy (Ptr<LrWpanPhy> phy)
 {
   m_phy = phy;
-  phy->RegisterListener (this);
 }
 
 Ptr<LrWpanPhy>
@@ -613,8 +597,26 @@ LrWpanMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
           if (acceptFrame
               && (receivedMacHdr.GetDstAddrMode () == 2))
             {
-              acceptFrame = receivedMacHdr.GetShortDstAddr () == m_shortAddress
-                || receivedMacHdr.GetShortDstAddr () == Mac16Address ("ff:ff");        // check for broadcast addrs
+              if (receivedMacHdr.GetShortDstAddr () == m_shortAddress)
+                {
+                  // unicast, for me
+                  acceptFrame = true;
+                }
+              else if (receivedMacHdr.GetShortDstAddr () == Mac16Address ("ff:ff"))
+                {
+                  // broadcast
+                  acceptFrame = true;
+                }
+              else
+                {
+                  // multicast
+                  uint8_t buf[2];
+                  receivedMacHdr.GetShortDstAddr ().CopyTo (buf);
+                  if (buf[0] & 0x80)
+                    {
+                      acceptFrame = true;
+                    }
+                }
             }
 
           if (acceptFrame
@@ -687,7 +689,6 @@ LrWpanMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                 }
               else if (receivedMacHdr.IsAcknowledgment () && m_txPkt && m_lrWpanMacState == MAC_ACK_PENDING)
                 {
-                  NS_LOG_DEBUG("Acked");
                   LrWpanMacHeader macHdr;
                   m_txPkt->PeekHeader (macHdr);
                   if (receivedMacHdr.GetSeqNum () == macHdr.GetSeqNum ())
@@ -723,13 +724,13 @@ LrWpanMac::PdDataIndication (uint32_t psduLength, Ptr<Packet> p, uint8_t lqi)
                           m_setMacState = Simulator::ScheduleNow (&LrWpanMac::SetLrWpanMacState, this, MAC_CSMA);
                         }
                     }
-                }   //IsAcknowledgment
-            }       //accepetFrame
+                }
+            }
           else
             {
               m_macRxDropTrace (originalPkt);
             }
-        }           //!m_macPromiscuousMode
+        }
     }
 }
 
@@ -765,7 +766,6 @@ LrWpanMac::SendAck (uint8_t seqno)
 void
 LrWpanMac::RemoveFirstTxQElement ()
 {
-  NS_LOG_FUNCTION (this);
   TxQueueElement *txQElement = m_txQueue.front ();
   Ptr<const Packet> p = txQElement->txQPkt;
   m_numCsmacaRetry += m_csmaCa->GetNB () + 1;
@@ -781,7 +781,6 @@ LrWpanMac::RemoveFirstTxQElement ()
   txQElement->txQPkt = 0;
   delete txQElement;
   m_txQueue.pop_front ();
-  m_qSize--;
   m_txPkt = 0;
   m_retransmission = 0;
   m_numCsmacaRetry = 0;
@@ -802,7 +801,6 @@ LrWpanMac::AckWaitTimeout (void)
     }
   else
     {
-      NS_LOG_DEBUG("MAC retransmission");
       SetLrWpanMacState (MAC_CSMA);
     }
 }
@@ -968,7 +966,7 @@ LrWpanMac::PlmeSetTRXStateConfirm (LrWpanPhyEnumeration status)
     }
   else if (m_lrWpanMacState == MAC_ACK_PENDING)
     {
-      NS_ASSERT (status == IEEE_802_15_4_PHY_RX_ON || status == IEEE_802_15_4_PHY_SUCCESS || status == IEEE_802_15_4_PHY_TRX_OFF); // originally without last or
+      NS_ASSERT (status == IEEE_802_15_4_PHY_RX_ON || status == IEEE_802_15_4_PHY_SUCCESS);
     }
   else
     {
@@ -1097,42 +1095,6 @@ void
 LrWpanMac::SetMacMaxFrameRetries (uint8_t retries)
 {
   m_macMaxFrameRetries = retries;
-}
-
-void
-LrWpanMac::NotifyRx ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-LrWpanMac::NotifyRxStart ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-LrWpanMac::NotifyTx ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-LrWpanMac::NotifyTxStart ()
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-LrWpanMac::NotifySleep (void)
-{
-  NS_LOG_FUNCTION (this);
-}
-
-void
-LrWpanMac::NotifyTransition (LrWpanPhyEnumeration nextState)
-{
-  NS_LOG_FUNCTION (this);
 }
 
 } // namespace ns3

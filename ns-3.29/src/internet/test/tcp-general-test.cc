@@ -224,6 +224,10 @@ TcpGeneralTest::DoRun (void)
                                               MakeCallback (&TcpGeneralTest::NextTxSeqTrace, this));
   m_senderSocket->TraceConnectWithoutContext ("HighestSequence",
                                               MakeCallback (&TcpGeneralTest::HighestTxSeqTrace, this));
+  m_senderSocket->m_rateOps->TraceConnectWithoutContext ("TcpRateUpdated",
+                                              MakeCallback (&TcpGeneralTest::RateUpdatedTrace, this));
+  m_senderSocket->m_rateOps->TraceConnectWithoutContext ("TcpRateSampleUpdated",
+                                              MakeCallback (&TcpGeneralTest::RateSampleUpdatedTrace, this));
 
 
   m_remoteAddr = InetSocketAddress (serverAddress, 4477);
@@ -878,6 +882,24 @@ TcpGeneralTest::GetRxBuffer (SocketWho who)
       NS_FATAL_ERROR ("Not defined");
     }
 }
+
+ Ptr<TcpTxBuffer>
+ TcpGeneralTest::GetTxBuffer (SocketWho who)
+ {
+  if (who == SENDER)
+    {
+      return DynamicCast<TcpSocketMsgBase> (m_senderSocket)->m_txBuffer;
+    }
+  else if (who == RECEIVER)
+    {
+      return DynamicCast<TcpSocketMsgBase> (m_receiverSocket)->m_txBuffer;
+    }
+  else
+    {
+      NS_FATAL_ERROR ("Not defined");
+    }
+ }
+
 
 void
 TcpGeneralTest::SetRcvBufSize (SocketWho who, uint32_t size)

@@ -26,7 +26,6 @@
 #include <ns3/net-device.h>
 #include <ns3/traced-callback.h>
 #include <ns3/lr-wpan-mac.h>
-#include <ns3/lr-wpan-nullmac.h>
 
 namespace ns3 {
 
@@ -190,6 +189,16 @@ private:
    * Configure PHY, MAC and CSMA/CA.
    */
   void CompleteConfig (void);
+
+  /**
+   * Builds a Mac48Address from the PanId and Short Address
+   * The form is PanId : 0x0 : 0x0 : ShortAddress
+   *
+   * \param panId The PanID
+   * \param shortMac The Short MAC address
+   * \return a Pseudo-Mac48Adress
+   */
+  Mac48Address BuildPseudoMacAddress (uint16_t panId, Mac16Address shortAddr) const;
 
   /**
    * The MAC for this NetDevice.

@@ -7,6 +7,7 @@
     
 
 // Module headers:
+#include "cobalt-queue-disc.h"
 #include "codel-queue-disc.h"
 #include "fifo-queue-disc.h"
 #include "fq-codel-queue-disc.h"

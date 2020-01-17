@@ -16,7 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Author:  Tom Henderson <thomas.r.henderson@boeing.com>
- *        Vishwesh Rege <vrege2012@gmail.com>
  */
 
 /*
@@ -35,8 +34,6 @@
 #include <ns3/single-model-spectrum-channel.h>
 #include <ns3/constant-position-mobility-model.h>
 #include <ns3/packet.h>
-#include "ns3/lr-wpan-radio-energy-model.h"
-#include "ns3/basic-energy-source.h"
 
 #include <iostream>
 
@@ -44,34 +41,30 @@ using namespace ns3;
 
 static void DataIndication (McpsDataIndicationParams params, Ptr<Packet> p)
 {
-  std::cout << "Received packet of size " << p->GetSize () << "\n";
+  NS_LOG_UNCOND ("Received packet of size " << p->GetSize ());
 }
 
 static void DataConfirm (McpsDataConfirmParams params)
 {
-  std::cout << "LrWpanMcpsDataConfirmStatus = " << params.m_status << "\n";
+  NS_LOG_UNCOND ("LrWpanMcpsDataConfirmStatus = " << params.m_status);
 }
 
 static void StateChangeNotification (std::string context, Time now, LrWpanPhyEnumeration oldState, LrWpanPhyEnumeration newState)
 {
-  std::cout << context << " state change at " << now.GetSeconds ()
-                       << " from " << LrWpanHelper::LrWpanPhyEnumerationPrinter (oldState)
-                       << " to " << LrWpanHelper::LrWpanPhyEnumerationPrinter (newState) << "\n";
-}
-
-static void GetTotalEnergyConsumption (std::string context, double oldValue, double newValue)
-{
-  std::cout << context << " TotalEnergyConsumption: " << newValue
-                       << " from " << oldValue << "\n";
+  NS_LOG_UNCOND (context << " state change at " << now.GetSeconds ()
+                         << " from " << LrWpanHelper::LrWpanPhyEnumerationPrinter (oldState)
+                         << " to " << LrWpanHelper::LrWpanPhyEnumerationPrinter (newState));
 }
 
 int main (int argc, char *argv[])
 {
   bool verbose = false;
+  bool extended = false;
 
   CommandLine cmd;
 
   cmd.AddValue ("verbose", "turn on all log components", verbose);
+  cmd.AddValue ("extended", "use extended addressing", extended);
 
   cmd.Parse (argc, argv);
 
@@ -80,8 +73,6 @@ int main (int argc, char *argv[])
     {
       lrWpanHelper.EnableLogComponents ();
     }
-
-  LogComponentEnable ("BasicEnergySource", LOG_LEVEL_DEBUG);
 
   // Enable calculation of FCS in the trailers. Only necessary when interacting with real devices or wireshark.
   // GlobalValue::Bind ("ChecksumEnabled", BooleanValue (true));
@@ -93,8 +84,18 @@ int main (int argc, char *argv[])
   Ptr<LrWpanNetDevice> dev0 = CreateObject<LrWpanNetDevice> ();
   Ptr<LrWpanNetDevice> dev1 = CreateObject<LrWpanNetDevice> ();
 
-  dev0->SetAddress (Mac16Address ("00:01"));
-  dev1->SetAddress (Mac16Address ("00:02"));
+  if (!extended)
+    {
+      dev0->SetAddress (Mac16Address ("00:01"));
+      dev1->SetAddress (Mac16Address ("00:02"));
+    }
+  else
+    {
+      Ptr<LrWpanMac> mac0 = dev0->GetMac();
+      Ptr<LrWpanMac> mac1 = dev1->GetMac();
+      mac0->SetExtendedAddress (Mac64Address ("00:00:00:00:00:00:00:01"));
+      mac1->SetExtendedAddress (Mac64Address ("00:00:00:00:00:00:00:02"));
+    }
 
   // Each device must be attached to the same channel
   Ptr<SingleModelSpectrumChannel> channel = CreateObject<SingleModelSpectrumChannel> ();
@@ -110,46 +111,23 @@ int main (int argc, char *argv[])
   n0->AddDevice (dev0);
   n1->AddDevice (dev1);
 
-  Ptr<LrWpanRadioEnergyModel> em0 = CreateObject<LrWpanRadioEnergyModel> ();
-  Ptr<LrWpanRadioEnergyModel> em1 = CreateObject<LrWpanRadioEnergyModel> ();
-
-  Ptr<BasicEnergySource> es0 = CreateObject<BasicEnergySource> ();
-  es0->SetSupplyVoltage(3.3);
-  Ptr<BasicEnergySource> es1 = CreateObject<BasicEnergySource> ();
-  es1->SetSupplyVoltage(3.3);
-
-  es0->SetNode (n0);
-  es0->AppendDeviceEnergyModel (em0);
-  em0->SetEnergySource (es0);
-  em0->AttachPhy (dev0->GetPhy());
-
-  es1->SetNode (n1);
-  es1->AppendDeviceEnergyModel (em1);
-  em1->SetEnergySource (es1);
-  em1->AttachPhy (dev1->GetPhy());
-
-  es0->TraceConnect ("RemainingEnergy", std::string ("phy0"), MakeCallback (&GetTotalEnergyConsumption));
-  es1->TraceConnect ("RemainingEnergy", std::string ("phy1"), MakeCallback (&GetTotalEnergyConsumption));
-
   // Trace state changes in the phy
   dev0->GetPhy ()->TraceConnect ("TrxState", std::string ("phy0"), MakeCallback (&StateChangeNotification));
   dev1->GetPhy ()->TraceConnect ("TrxState", std::string ("phy1"), MakeCallback (&StateChangeNotification));
 
   Ptr<ConstantPositionMobilityModel> sender0Mobility = CreateObject<ConstantPositionMobilityModel> ();
-  // Configure position 0 m distance
   sender0Mobility->SetPosition (Vector (0,0,0));
   dev0->GetPhy ()->SetMobility (sender0Mobility);
-
   Ptr<ConstantPositionMobilityModel> sender1Mobility = CreateObject<ConstantPositionMobilityModel> ();
   // Configure position 10 m distance
   sender1Mobility->SetPosition (Vector (0,10,0));
   dev1->GetPhy ()->SetMobility (sender1Mobility);
 
-  McpsDataConfirmCallback cb0;          // Set the callback for the confirmation of a data transmission request
+  McpsDataConfirmCallback cb0;
   cb0 = MakeCallback (&DataConfirm);
   dev0->GetMac ()->SetMcpsDataConfirmCallback (cb0);
 
-  McpsDataIndicationCallback cb1;       // Set the callback for the indication of an incoming data packet
+  McpsDataIndicationCallback cb1;
   cb1 = MakeCallback (&DataIndication);
   dev0->GetMac ()->SetMcpsDataIndicationCallback (cb1);
 
@@ -172,10 +150,19 @@ int main (int argc, char *argv[])
   // 2) DataIndication callback is called with value of 50
   Ptr<Packet> p0 = Create<Packet> (50);  // 50 bytes of dummy data
   McpsDataRequestParams params;
-  params.m_srcAddrMode = SHORT_ADDR;
-  params.m_dstAddrMode = SHORT_ADDR;
   params.m_dstPanId = 0;
-  params.m_dstAddr = Mac16Address ("00:02");
+  if (!extended)
+    {
+      params.m_srcAddrMode = SHORT_ADDR;
+      params.m_dstAddrMode = SHORT_ADDR;
+      params.m_dstAddr = Mac16Address ("00:02");
+    }
+  else
+    {
+      params.m_srcAddrMode = EXT_ADDR;
+      params.m_dstAddrMode = EXT_ADDR;
+      params.m_dstExtAddr = Mac64Address ("00:00:00:00:00:00:00:02");
+    }
   params.m_msduHandle = 0;
   params.m_txOptions = TX_OPTION_ACK;
 //  dev0->GetMac ()->McpsDataRequest (params, p0);
@@ -185,12 +172,18 @@ int main (int argc, char *argv[])
 
   // Send a packet back at time 2 seconds
   Ptr<Packet> p2 = Create<Packet> (60);  // 60 bytes of dummy data
-  params.m_dstAddr = Mac16Address ("00:01");
+  if (!extended)
+    {
+      params.m_dstAddr = Mac16Address ("00:01");
+    }
+  else
+    {
+      params.m_dstExtAddr = Mac64Address ("00:00:00:00:00:00:00:01");
+    }
   Simulator::ScheduleWithContext (2, Seconds (2.0),
                                   &LrWpanMac::McpsDataRequest,
                                   dev1->GetMac (), params, p2);
 
-  Simulator::Stop (Seconds (5));
   Simulator::Run ();
 
   Simulator::Destroy ();
