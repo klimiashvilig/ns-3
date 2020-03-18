@@ -3,8 +3,8 @@
 cd ..
 
 writeInFile=true;
-fileSize=10000;
-packetSize=75;
+fileSize=200;
+packetSize=50;
 distance=75;
 varDistance=false;
 
