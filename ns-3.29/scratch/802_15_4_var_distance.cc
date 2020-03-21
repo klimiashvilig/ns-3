@@ -152,7 +152,7 @@ int main(int argc, char * argv[])
   }
 
   OnOffHelper onOff("ns3::UdpSocketFactory", Inet6SocketAddress(deviceInterfaces.GetAddress(numNodes - 1,1), 4000));
-  onOff.SetConstantRate(DataRate("250kbps"));
+  onOff.SetConstantRate(DataRate("125kbps"));
   ApplicationContainer sourceApps = onOff.Install(c.Get(0));
   sourceApps.Start(Seconds(0));
   sourceApps.Stop(Seconds(10000.0));

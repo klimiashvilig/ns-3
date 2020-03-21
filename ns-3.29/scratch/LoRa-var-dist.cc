@@ -68,7 +68,7 @@ using namespace ns3;
 
 int nEndDevices = 1;
 int nGatways = 1;
-static const int defaultDistance = 7000;
+static const int defaultDistance = 600;
 static int fileSize = 10000;
 
 std::ofstream myFile;
@@ -82,11 +82,14 @@ DeviceEnergyModelContainer gatewayModels;
 void 
 PacketReceptionCallback(Ptr<Packet const> packet, uint32_t systemId) {
     double energyConsumed = 0;
+    double ED_EnergyConsumed = 0;
+    double GW_EnergyConsumed = 0;
     for (DeviceEnergyModelContainer::Iterator iter = endDeviceModels.Begin(); iter != endDeviceModels.End(); iter++)
-        energyConsumed += (*iter)->GetTotalEnergyConsumption();
+        ED_EnergyConsumed += (*iter)->GetTotalEnergyConsumption();
     for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++)
-        energyConsumed += (*iter)->GetTotalEnergyConsumption();
-    std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s  |  Total energy consumed - " << energyConsumed << "J" << std::endl;
+        GW_EnergyConsumed += (*iter)->GetTotalEnergyConsumption();
+    energyConsumed = ED_EnergyConsumed + GW_EnergyConsumed;
+    std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s  |  Total energy consumed - " << energyConsumed << "J ED - " << ED_EnergyConsumed << " GW - " << GW_EnergyConsumed << std::endl;
 }
 
 int main (int argc, char *argv[])
@@ -203,7 +206,7 @@ int main (int argc, char *argv[])
     // configure energy source
     basicSourceHelper.Set ("BasicEnergySourceInitialEnergyJ", DoubleValue (10000));
     // install source
-    basicSourceHelper.Set ("BasicEnergySupplyVoltageV",DoubleValue (3.6)); // in Volts
+    basicSourceHelper.Set ("BasicEnergySupplyVoltageV",DoubleValue (5)); // in Volts
 
     EnergySourceContainer endDeviceSources = basicSourceHelper.Install (endDevices);
     EnergySourceContainer gatewaySources = basicSourceHelper.Install (gateways);
