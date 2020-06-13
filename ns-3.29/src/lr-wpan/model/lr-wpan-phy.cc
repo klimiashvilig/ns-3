@@ -145,7 +145,7 @@ LrWpanPhy::LrWpanPhy (void)
   m_edPower.measurementLength = Seconds (0.0);
 
   // default -110 dBm in W for 2.4 GHz
-  m_rxSensitivity = pow (10.0, -106.58 / 10.0) / 1000.0;
+  m_rxSensitivity = pow (10.0, -103 / 10.0) / 1000.0;
   LrWpanSpectrumValueHelper psdHelper;
   m_txPsd = psdHelper.CreateTxPowerSpectralDensity (m_phyPIBAttributes.phyTransmitPower,
                                                     m_phyPIBAttributes.phyCurrentChannel);
@@ -530,7 +530,7 @@ LrWpanPhy::PdDataRequest (const uint32_t psduLength, Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << psduLength << p);
 
-  NS_LOG_DEBUG("Phy packet size = " << p->GetSize());
+  // std::cout << "Phy packet size = " << p->GetSize() << std::endl;
 
   if (psduLength > aMaxPhyPacketSize)
     {

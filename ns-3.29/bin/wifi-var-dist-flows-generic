@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeInFile=true;
+routing=false;
+fileSize=200;
+
+./waf shell &
+
+for distance in {75..225..75}
+do
+	for streamNumber in {1..8}
+	do
+		for runNum in {1..8}
+		do
+			if [ "$streamNumber" -ne 8 ] || [ "$runNum" -ne 8  ]
+			then
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --streamNumber=$streamNumber
+			else
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true --streamNumber=$streamNumber
+			fi
+		done
+	done
+done
+
+for distance in {300..450..75}
+do
+	for streamNumber in {1..8}
+	do
+		for runNum in {1..4}
+		do
+			if [ "$streamNumber" -ne 8 ] || [ "$runNum" -ne 4  ]
+			then
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --streamNumber=$streamNumber
+			else
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true --streamNumber=$streamNumber
+			fi
+		done
+	done
+done
+
+for distance in {525..600..75}
+do
+	for streamNumber in {1..8}
+	do
+		for runNum in {1..2}
+		do
+			if [ "$streamNumber" -ne 8 ] || [ "$runNum" -ne 2  ]
+			then
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --streamNumber=$streamNumber
+			else
+				./build/scratch/wifi-var-dist-2flows --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --routing=$routing --fileSize=$fileSize --endLine=true --streamNumber=$streamNumber
+			fi
+		done
+	done
+done
+
+
+

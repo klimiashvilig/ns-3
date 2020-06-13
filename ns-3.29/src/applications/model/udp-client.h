@@ -65,6 +65,8 @@ public:
    */
   void SetRemote (Address addr);
 
+  void mySend(void);
+
 protected:
   virtual void DoDispose (void);
 

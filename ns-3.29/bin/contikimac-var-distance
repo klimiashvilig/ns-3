@@ -2,27 +2,21 @@
 
 cd ..
 
-writeInFile=false;
-routing=true;
-fileSize=200;
-packetSize=75;
-maxRetries=30;
-ccaInterval=0.0006;
-pktInterval=0.00055;
+writeInFile=true;
+
 
 ./waf shell &
 
-for distance in {150..150..75}
+./build/scratch/ECE445_Lab2 --distance=1 --writeInFile=$writeInFile --useFrii=true
+for distance in {10..1000..10}
 do
-	for runNum in {1..30}
-	do
-		if [ "$runNum" -ne 30 ]
-		then
-			./build/scratch/contikimac-var-distance --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --maxRetries=$maxRetries --ccaInterval=$ccaInterval --pktInterval=$pktInterval
-		else
-			./build/scratch/contikimac-var-distance --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --packetSize=$packetSize --maxRetries=$maxRetries --ccaInterval=$ccaInterval --pktInterval=$pktInterval --endLine=true
-		fi
-	done
+	./build/scratch/ECE445_Lab2 --distance=$distance --writeInFile=$writeInFile --useFrii=true
+done
+
+./build/scratch/ECE445_Lab2 --distance=1 --writeInFile=$writeInFile --useFrii=false
+for distance in {10..1000..10}
+do
+	./build/scratch/ECE445_Lab2 --distance=$distance --writeInFile=$writeInFile --useFrii=false
 done
 
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeInFile=true;
+fileSize=200;
+
+./waf shell &
+
+for distance in {75..600..75}
+do
+	for runNum in {1..20}
+	do
+		if [ "$runNum" -ne 20 ]
+		then
+			./build/scratch/wifi-var-dist-mr --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize
+		else
+			./build/scratch/wifi-var-dist-mr --distance=$distance --runNum=$runNum --writeInFile=$writeInFile --fileSize=$fileSize --endLine=true
+		fi
+	done
+done
+
+
+

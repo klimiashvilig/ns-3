@@ -48,6 +48,7 @@ bool useCheckPoints = true; // whether we want to plot time vs throughput
 std::ofstream timeVsThroughputFile;
 double throughput = 0;
 bool firstPacket = true;
+double firstPacketReceiveTime = 0;
 
 std::string fileName = "802-15-4-results-" + (varDistance? (std::to_string(fileSize) + "B") : (std::to_string(distance) + "m")) + "-" + std::to_string(packetSize) + "B" + ".txt";
 std::string fileName_time = "802-15-4-time-" + (varDistance? (std::to_string(fileSize) + "B") : (std::to_string(distance) + "m")) + "-" + std::to_string(packetSize) + "B" + ".txt";
@@ -60,6 +61,7 @@ void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
     firstPacket = false;
     initialEnergy = energyConsumed;
     energyConsumed = 0;
+    firstPacketReceiveTime = Simulator::Now().GetSeconds();
   }
   std::cout << "Packet of size " << packet->GetSize() << "B received at " 
       << Simulator::Now().GetSeconds() - startTime << "s. Total size received "
@@ -68,6 +70,11 @@ void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
   throughput = (int)onOffSink1->GetTotalRx() * 8.0 / 1000.0 / (Simulator::Now().GetSeconds() - startTime);
   std::cout << "Throughput = " << throughput << "kbps" << std::endl;
   std::cout << "Throughput per hop = " << (int)onOffSink1->GetTotalRx() * 8.0 * numHops / 1000.0 / (Simulator::Now().GetSeconds() - startTime) << "kbps" << std::endl;
+  if (Simulator::Now().GetSeconds() != firstPacketReceiveTime) {
+    throughput = ((int)onOffSink1->GetTotalRx() - packetSize) * 8.0 / 1000.0 / (Simulator::Now().GetSeconds() - firstPacketReceiveTime);
+    std::cout << "Throughput = " << throughput << "kbps (after first packet)" << std::endl;
+    std::cout << "Throughput per hop = " << (int)onOffSink1->GetTotalRx() * 8.0 * numHops / 1000.0 / (Simulator::Now().GetSeconds() - firstPacketReceiveTime) << "kbps (after first packet)" << std::endl;
+  }
   if (useCheckPoints) {
     if ((int) onOffSink1->GetTotalRx() >= checkPoint) {
       if (!timeVsThroughputFile.is_open())
@@ -81,7 +88,7 @@ void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
       if (!myFile.is_open()) {
         myFile.open(fileName, std::ofstream::app);
       }
-      myFile << Simulator::Now().GetSeconds() - startTime << "," << energyConsumed << ",";
+      myFile << Simulator::Now().GetSeconds() - startTime << "," << Simulator::Now().GetSeconds() - firstPacketReceiveTime << "," << energyConsumed << ",";
       myFile.close();
     }
     Simulator::Stop();
@@ -234,7 +241,7 @@ int main(int argc, char * argv[])
   }
   // deviceInterfaces.SetDefaultRouteInAllNodes (1);
 
-  PrintRoutingTable(c.Get(0));
+  // PrintRoutingTable(c.Get(0));
 
   //Add static routing
   Ipv6StaticRoutingHelper ipv6RoutingHelper;
@@ -244,10 +251,11 @@ int main(int argc, char * argv[])
     staticRouting[i] = ipv6RoutingHelper.GetStaticRouting (c.Get(i)->GetObject<Ipv6>());
     staticRouting[i]->AddHostRouteTo (deviceInterfaces.GetAddress (numNodes - 1,1), deviceInterfaces.GetAddress (i + 1,1), 1);
   }
-  PrintRoutingTable(c.Get(0));
+  // PrintRoutingTable(c.Get(0));
 
   OnOffHelper onOff("ns3::UdpSocketFactory", Inet6SocketAddress(deviceInterfaces.GetAddress(numNodes - 1,1), 4000));
-  onOff.SetConstantRate(DataRate("5kbps"));
+  std::string dr = "100kbps";//(int)(200/(numNodes-1)) + "kbps";
+  onOff.SetConstantRate(DataRate(dr));
   onOff.SetAttribute ("PacketSize", UintegerValue (packetSize));
   ApplicationContainer sourceApps = onOff.Install(c.Get(0));
   sourceApps.Start(Seconds(startTime));

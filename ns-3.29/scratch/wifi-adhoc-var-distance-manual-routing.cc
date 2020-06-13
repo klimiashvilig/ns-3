@@ -84,7 +84,7 @@ using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("WifiSimpleAdhoc");
 
 static const int distanceBetweenNodes = 75;
-static int fileSize = 10000;
+static int fileSize = 200;
 static const int senderNode = 0;
 static int receiverNode;// = numNodes - 1;
 std::ofstream myFile;
@@ -132,6 +132,9 @@ void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
 }
 
 int main(int argc, char * argv[]) {
+
+  ////////////////////////////////////// Initilize variables /////////////////////////////////////////////
+
   int distance = 300;
   int runNum = 1;
   bool endLine = false;
@@ -169,7 +172,9 @@ int main(int argc, char * argv[]) {
   Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode",
     StringValue(phyMode));
   Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-    UintegerValue(200));
+    UintegerValue(150));
+
+  ////////////////////////////////////// Create Nodes /////////////////////////////////////////////
 
   NodeContainer c;
   c.Create(numNodes);
@@ -177,6 +182,8 @@ int main(int argc, char * argv[]) {
   for (int i = 0; i < numNodes - 1; i++) {
     n[i] = NodeContainer(c.Get(i), c.Get(i + 1));
   }
+
+  ////////////////////////////////////// Physical Layer /////////////////////////////////////////////
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -187,7 +194,7 @@ int main(int argc, char * argv[]) {
   // set it to zero; otherwise, gain will be added
   wifiPhy.Set("RxGain", DoubleValue(10));
   // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
-  wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
+  // wifiPhy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
 
   YansWifiChannelHelper wifiChannel;
   wifiChannel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
@@ -198,6 +205,9 @@ int main(int argc, char * argv[]) {
     "ReferenceDistance", DoubleValue(1.0),
     "ReferenceLoss", DoubleValue(40.04)); //ADD
   wifiPhy.SetChannel(wifiChannel.Create());
+
+
+  ////////////////////////////////////// MAC Layer /////////////////////////////////////////////
 
   // Add a mac and disable rate control
   WifiMacHelper wifiMac;
@@ -212,8 +222,9 @@ int main(int argc, char * argv[]) {
   }
   NetDeviceContainer devices = wifi.Install(wifiPhy, wifiMac, c);
 
-  // Note that with FixedRssLossModel, the positions below are not
-  // used for received signal strength.
+
+  ////////////////////////////////////// Mobility /////////////////////////////////////////////
+
   MobilityHelper mobility;
   Ptr < ListPositionAllocator > positionAlloc = CreateObject < ListPositionAllocator > ();
   double x, y;
@@ -225,6 +236,9 @@ int main(int argc, char * argv[]) {
   mobility.SetPositionAllocator(positionAlloc);
   mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
   mobility.Install(c);
+
+
+  ////////////////////////////////////// Create Manual Routes /////////////////////////////////////////////
 
   InternetStackHelper internet;
   internet.Install(c);
@@ -254,7 +268,9 @@ int main(int argc, char * argv[]) {
     staticRouting[j]->AddHostRouteTo(i[numNodes - 2].GetAddress(1), i[j].GetAddress(1), 1);
   }
 
-  //---------------------------------------------------
+
+  ////////////////////////////////////// Create Application Layer /////////////////////////////////////////////
+
   OnOffHelper onOff("ns3::UdpSocketFactory",
     InetSocketAddress(i[numNodes - 2].GetAddress(1), 9));
   onOff.SetConstantRate(DataRate("54Mbps"));
@@ -270,10 +286,9 @@ int main(int argc, char * argv[]) {
   sinkApps.Start(Seconds(0));
   sinkApps.Stop(Seconds(10000.0));
 
-  //---------------------------------------------------
+  
+  ////////////////////////////////////// Attach Energy Model /////////////////////////////////////////////
 
-  /** Energy Model **/
-  /***************************************************************************/
   /* energy source */
   BasicEnergySourceHelper basicSourceHelper;
   // configure energy source

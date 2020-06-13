@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+cd ..
+
+writeToFile=true;
+
+
+./waf shell &
+
+./build/scratch/ECE445_Lab2 --distance=1 --writeToFile=$writeToFile --useFrii=true
+for distance in {10..1000..10}
+do
+	./build/scratch/ECE445_Lab2 --distance=$distance --writeToFile=$writeToFile --useFrii=true
+done
+
+./build/scratch/ECE445_Lab2 --distance=1 --writeToFile=$writeToFile --useFrii=false --passLossExponent=3
+for distance in {10..1000..10}
+do
+	./build/scratch/ECE445_Lab2 --distance=$distance --writeToFile=$writeToFile --useFrii=false --passLossExponent=3
+done
+
+./build/scratch/ECE445_Lab2 --distance=1 --writeToFile=$writeToFile --useFrii=false --passLossExponent=5
+for distance in {10..1000..10}
+do
+	./build/scratch/ECE445_Lab2 --distance=$distance --writeToFile=$writeToFile --useFrii=false --passLossExponent=5
+done
+

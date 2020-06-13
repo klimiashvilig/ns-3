@@ -69,7 +69,7 @@ using namespace ns3;
 int nEndDevices = 1;
 int nGatways = 1;
 static const int defaultDistance = 7000;
-static int fileSize = 10000;
+static int fileSize = 200;
 
 std::ofstream myFile;
 std::string fileName = "LoRaresults-" + std::to_string(fileSize) + "B.txt";
@@ -82,10 +82,18 @@ DeviceEnergyModelContainer gatewayModels;
 void 
 PacketReceptionCallback(Ptr<Packet const> packet, uint32_t systemId) {
     double energyConsumed = 0;
-    for (DeviceEnergyModelContainer::Iterator iter = endDeviceModels.Begin(); iter != endDeviceModels.End(); iter++)
+    double RxEnergy = 0;
+    double TxEnergy = 0;
+    for (DeviceEnergyModelContainer::Iterator iter = endDeviceModels.Begin(); iter != endDeviceModels.End(); iter++) {
         energyConsumed += (*iter)->GetTotalEnergyConsumption();
-    for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++)
+        TxEnergy += (*iter)->GetTotalEnergyConsumption();
+    }
+    for (DeviceEnergyModelContainer::Iterator iter = gatewayModels.Begin(); iter != gatewayModels.End(); iter++) {
         energyConsumed += (*iter)->GetTotalEnergyConsumption();
+        RxEnergy += (*iter)->GetTotalEnergyConsumption();
+    }
+    std::cout << "Rx Energy = " << RxEnergy << std::endl;
+    std::cout << "Tx Energy = " << TxEnergy << std::endl;
     std::cout << "Simulation time - " << Simulator::Now ().GetSeconds () << "s  |  Total energy consumed - " << energyConsumed << "J" << std::endl;
 }
 
@@ -93,7 +101,7 @@ int main (int argc, char *argv[])
 {
   if (writeInFile)
     myFile.open(fileName, std::ofstream::app);
-  for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 600:defaultDistance); distance += 75) {
+  for (int distance = (variableDistance ? 75:defaultDistance); distance <= (variableDistance ? 75:defaultDistance); distance += 75) {
     CommandLine cmd;
     cmd.Parse (argc, argv);
     RngSeedManager::SetSeed (1);

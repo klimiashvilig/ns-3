@@ -202,6 +202,8 @@ LoraPhy::GetOnAirTime (Ptr<Packet> packet, LoraTxParameters txParams)
   NS_LOG_DEBUG ("tPreamble = " << tPreamble);
   NS_LOG_DEBUG ("tPayload = " << tPayload);
   NS_LOG_DEBUG ("Total time = " << tPreamble + tPayload);
+  std::cout << "Packet size = " << pl << std::endl;
+  std::cout << "Air time = " << tPreamble + tPayload << std::endl;
 
   // Compute and return the total packet on-air time
   return Seconds (tPreamble + tPayload);

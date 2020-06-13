@@ -164,7 +164,7 @@ EndDeviceLoraMac::Send (Ptr<Packet> packet)
       params.codingRate = m_codingRate;
       params.bandwidthHz = GetBandwidthFromDataRate (m_dataRate);
       params.nPreamble = m_nPreambleSymbols;
-      params.crcEnabled = 1;
+      params.crcEnabled = 0;
       params.lowDataRateOptimizationEnabled = 0;
       NS_LOG_INFO("SF=" << (int)params.sf << " codingRate=" << (int)params.codingRate << " bandwidthHz=" << params.bandwidthHz);
 

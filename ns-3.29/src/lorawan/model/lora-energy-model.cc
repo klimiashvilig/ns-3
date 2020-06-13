@@ -39,7 +39,7 @@ LoraEnergyModel::GetTypeId (void)
     .AddConstructor<LoraEnergyModel> ()
     .AddAttribute ("IdleCurrentA",
                    "The default radio Idle current in Ampere.",
-                   DoubleValue (0.0000015),  // idle mode = 1.5µA
+                   DoubleValue (0.0018), //(0.0000015),  // idle mode = 1.5µA
                    MakeDoubleAccessor (&LoraEnergyModel::SetIdleCurrentA,
                                        &LoraEnergyModel::GetIdleCurrentA),
                    MakeDoubleChecker<double> ())
