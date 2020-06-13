@@ -30,7 +30,7 @@
 using namespace ns3;
 
 int distance = 75;
-int fileSize = 10;
+int fileSize = 200;
 bool writeInFile = false;
 const int distanceBetweenNodes = 75;
 int packetSize = 75;
@@ -51,7 +51,11 @@ std::string fileName_time = "802-15-4-time-" + (varDistance? (std::to_string(fil
 
 double startTime = 10;
 double interPacketInterval = 1;
-int totalRx = 0;
+int packet_id = 1;
+
+int maxPacketSize[8] = {84, 80, 78, 76, 74, 72, 70, 68};
+int routing_overhead[8] = {0, 1, 1, 8, 10, 12, 14, 16};
+double delay_between_packets[8] = {0, 0.023, 0.04, 0.028, 0.035, 0.043, 0.05, 0.058};
 
 void getEnergy() {
   double energyConsumed = 0;
@@ -70,16 +74,35 @@ void PacketSinkTraceSink(Ptr<const Packet> packet, const Address & from) {
   for (int i = 0; i < numNodes; i++)
     energyConsumed += emp[i]->GetTotalEnergyConsumption();
   std::cout << "Packet of size " << packet->GetSize() << "B received at " 
-      << Simulator::Now().GetSeconds() - startTime << "s. Energy consumed = " << energyConsumed << std::endl;
-  totalRx += packet->GetSize();
-  if ((int) sink1->GetTotalRx() >= fileSize) {
-    totalRx = 0;
-    if (writeInFile) {
-      if (!myFile.is_open()) {
-        myFile.open(fileName, std::ofstream::app);
+      << Simulator::Now().GetSeconds() - startTime << "s" << std::endl;
+  if (packet_id == 1) {
+    if (packet->GetSize() == (uint32_t)(packetSize - routing_overhead[numNodes - 2])) {
+      packet_id = 2;
+    } else {
+      // stay in the same state
+      std::cout << "Failed to deliver the file\n";
+    }
+  } else if (packet_id == 2) {
+    if (packet->GetSize() == (uint32_t)(packetSize - routing_overhead[numNodes - 2])) {
+      packet_id = 3;
+    } else {
+      packet_id = 1;
+      std::cout << "Failed to deliver the file\n";
+    }
+  } else {
+    if (packet->GetSize() == (uint32_t)(packetSize - routing_overhead[numNodes - 2])) {
+      packet_id = 2;
+    } else {
+      packet_id = 1;
+      std::cout << "File of size " << fileSize << "B received at " 
+          << Simulator::Now().GetSeconds() - startTime << "s. Energy consumed = " << energyConsumed << std::endl;
+      if (writeInFile) {
+        if (!myFile.is_open()) {
+          myFile.open(fileName, std::ofstream::app);
+        }
+        myFile << Simulator::Now().GetSeconds() - startTime << "," << Simulator::Now().GetSeconds() << "," << energyConsumed << ",";
+        myFile.close();
       }
-      myFile << Simulator::Now().GetSeconds() - startTime << "," << Simulator::Now().GetSeconds() << "," << energyConsumed << ",";
-      myFile.close();
     }
   }
 }
@@ -285,7 +308,7 @@ int main(int argc, char * argv[])
   UdpClientHelper client (sinkAddress, sinkPort);
   client.SetAttribute ("MaxPackets", UintegerValue (numPackets));
   client.SetAttribute ("Interval", TimeValue (Seconds (interPacketInterval)));
-  client.SetAttribute ("PacketSize", UintegerValue (packetSize));
+  client.SetAttribute ("PacketSize", UintegerValue (packetSize - routing_overhead[numNodes - 2]));
   ApplicationContainer apps ;
   apps = client.Install (c.Get (0));
   apps.Start (Seconds (startTime));
@@ -294,11 +317,20 @@ int main(int argc, char * argv[])
   UdpClientHelper client1 (sinkAddress, sinkPort);
   client1.SetAttribute ("MaxPackets", UintegerValue (numPackets));
   client1.SetAttribute ("Interval", TimeValue (Seconds (interPacketInterval)));
-  client1.SetAttribute ("PacketSize", UintegerValue (packetSize));
+  client1.SetAttribute ("PacketSize", UintegerValue (packetSize - routing_overhead[numNodes - 2]));
   ApplicationContainer apps1;
   apps1 = client1.Install (c.Get (0));
-  apps1.Start (Seconds (startTime + 0.013));
+  apps1.Start (Seconds (startTime + delay_between_packets[numNodes - 2]));
   apps1.Stop (Seconds(startTime + numPackets * interPacketInterval));
+
+  UdpClientHelper client2 (sinkAddress, sinkPort);
+  client2.SetAttribute ("MaxPackets", UintegerValue (numPackets));
+  client2.SetAttribute ("Interval", TimeValue (Seconds (interPacketInterval)));
+  client2.SetAttribute ("PacketSize", UintegerValue (fileSize - 2*maxPacketSize[numNodes - 2] - 9));
+  ApplicationContainer apps2;
+  apps2 = client2.Install (c.Get (0));
+  apps2.Start (Seconds (startTime + 2.0*delay_between_packets[numNodes - 2]));
+  apps2.Stop (Seconds(startTime + numPackets * interPacketInterval));
 
 
   ////////////////////////////////////// Tracing /////////////////////////////////////////////

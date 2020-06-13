@@ -2,11 +2,11 @@
 
 cd ..
 
-writeInFile=true;
+writeInFile=false;
 fileSize=200;
 packetSize=50;
 distance=75;
-varDistance=false;
+varDistance=true;
 
 ./waf shell &
 

@@ -530,7 +530,7 @@ LrWpanPhy::PdDataRequest (const uint32_t psduLength, Ptr<Packet> p)
 {
   NS_LOG_FUNCTION (this << psduLength << p);
 
-  // std::cout << "Phy packet size = " << p->GetSize() << std::endl;
+  // std::cout << this << " Phy packet size = " << p->GetSize() << std::endl;
 
   if (psduLength > aMaxPhyPacketSize)
     {
